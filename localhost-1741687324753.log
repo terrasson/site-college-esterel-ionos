@@ -1,0 +1,6 @@
+admin-photos-cuisine.html:384 Erreur: Error: Erreur lors de la rotation
+    at rotateImage (admin-photos-cuisine.html:381:27)
+    at async HTMLDivElement.<anonymous> (admin-photos-cuisine.html:304:21)
+rotateImage @ admin-photos-cuisine.html:384
+await in rotateImage
+(anonymous) @ admin-photos-cuisine.html:304

@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "path": "http://localhost:3000/assets/img/direction/direction_1737008512037.webp",
+      "type": "image",
+      "name": "direction_1737008512037.webp",
+      "startTime": "06:00",
+      "duration": 5,
+      "transition": "fade"
+    },
+    {
+      "type": "document",
+      "name": "doc_1737018687960-279165827_Menus_Colleges_gÃ©nÃ©riques_2024_2025_modÃ¨le.pdf",
+      "startTime": "00:00",
+      "duration": 5,
+      "transition": "fade"
+    },
+    {
+      "path": "http://localhost:3000/assets/img/direction/direction_1737015656272.webp",
+      "type": "image",
+      "name": "direction_1737015656272.webp",
+      "startTime": "00:00",
+      "duration": 5,
+      "transition": "fade"
+    }
+  ]
+}

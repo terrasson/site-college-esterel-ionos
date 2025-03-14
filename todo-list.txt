@@ -1,0 +1,11 @@
+debugger autentification a vercel
+creation page admin-photos-direction.html fait le 16/01/2025
+creation page admin-documents-direction.html fait le 16/01/2025
+creation de la page menu de la cuisine
+implementation de la page admin-photos-direction.html avec affichage-dynamique.html
+creation page admin-publication-diffusion.html pour gestion de l'affichage des document diffusés
+regler le probleme de chemin accés aux photos et documents dans admin-diaporama.html ca ne pointe pas vers le bon dossier
+test push macbook pro test 2
+amelioration de la page admin-diaporama.html pour que les transitions soient plus fluides entre les images du diaporama
+avoir des miniatures dans la page admin-diaporama.html
+.

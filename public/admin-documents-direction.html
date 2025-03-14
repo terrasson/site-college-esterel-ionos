@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administration - Documents Direction</title>
+    <link rel="stylesheet" href="/styles/common.css">
+    <style>
+        /* Styles de base similaires à admin-photos-direction.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: #f0f2f5;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .admin-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .document-card {
+            position: relative;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+
+        .document-card .document-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .document-card .document-type {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .document-delete {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .upload-zone {
+            border: 2px dashed #5eb3ec;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .upload-zone:hover {
+            background-color: rgba(94, 179, 236, 0.1);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: #5eb3ec;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4a90c9;
+        }
+
+        .status-message {
+            display: none;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .document-card a.btn {
+            display: inline-block;
+            text-decoration: none;
+            margin-top: 0.5rem;
+        }
+
+        .document-delete:hover {
+            background: rgba(220, 53, 69, 1);
+        }
+    </style>
+</head>
+
+<body>
+    <button id="backButton" class="back-button">← Retour</button>
+    <script src="/js/auth-check.js"></script>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>Administration des Documents de Direction</h1>
+            <p>Gérez ici les documents de la direction (PDF, Word, PowerPoint)</p>
+        </header>
+
+        <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple />
+            <p>Cliquez ou glissez-déposez vos documents ici</p>
+            <p class="accepted-formats">Formats acceptés : PDF, Word, PowerPoint</p>
+            <button class="btn btn-primary">Sélectionner des fichiers</button>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="documents-grid" id="documentsGrid">
+            <!-- Les documents seront chargés ici dynamiquement -->
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const documentsGrid = document.getElementById('documentsGrid');
+        const statusMessage = document.getElementById('statusMessage');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = '#5eb3ec';
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            for (const file of files) {
+                const validTypes = ['.pdf', '.doc', '.docx', '.ppt', '.pptx'];
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+
+                if (!validTypes.includes(fileExt)) {
+                    showStatus('Format de fichier non supporté. Utilisez PDF, Word ou PowerPoint.', false);
+                    continue;
+                }
+
+                const formData = new FormData();
+                formData.append('document', file);
+
+                try {
+                    console.log('Tentative d\'upload du fichier:', file.name);
+                    const response = await fetch('/api/upload-direction-document', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    console.log('Réponse du serveur:', result);
+
+                    if (response.ok) {
+                        showStatus('Document téléchargé avec succès !', true);
+                        loadDocuments();
+                    } else {
+                        throw new Error(result.message || 'Erreur lors du téléchargement');
+                    }
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    showStatus('Erreur lors du téléchargement du document.', false);
+                }
+            }
+        }
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch('/api/direction-documents');
+                const documents = await response.json();
+
+                documentsGrid.innerHTML = documents.map(doc => `
+                    <div class="document-card" data-filename="${doc.filename}">
+                        <div class="document-name">${doc.originalName}</div>
+                        <div class="document-type">${doc.type}</div>
+                        <a href="/assets/data/document-direction/${doc.filename}" class="btn btn-primary" download>
+                            Télécharger
+                        </a>
+                        <button class="document-delete" onclick="deleteDocument('${doc.filename}')">×</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showStatus('Erreur lors du chargement des documents.', false);
+            }
+        }
+
+        async function deleteDocument(filename) {
+            if (!confirm('Voulez-vous vraiment supprimer ce document ?')) return;
+
+            try {
+                const response = await fetch(`/api/direction-documents/${filename}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showStatus('Document supprimé avec succès !', true);
+                    loadDocuments();
+                } else {
+                    throw new Error('Erreur lors de la suppression');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showStatus('Erreur lors de la suppression du document.', false);
+            }
+        }
+
+        function showStatus(message, isSuccess) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + (isSuccess ? 'status-success' : 'status-error');
+            statusMessage.style.display = 'block';
+
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Chargement initial des documents
+        loadDocuments();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Stocker la page actuelle dans l'historique
+            const currentPage = window.location.pathname;
+            if (!sessionStorage.getItem('lastPage')) {
+                sessionStorage.setItem('lastPage', document.referrer || '/');
+            }
+
+            // Gérer le clic sur le bouton retour
+            document.getElementById('backButton').addEventListener('click', () => {
+                const lastPage = sessionStorage.getItem('lastPage');
+                if (lastPage && lastPage !== '') {
+                    window.location.href = lastPage;
+                } else {
+                    window.location.href = '/'; // Page par défaut si pas d'historique
+                }
+                sessionStorage.removeItem('lastPage'); // Nettoyer après utilisation
+            });
+
+            // Stocker la page actuelle pour le prochain retour
+            window.addEventListener('beforeunload', () => {
+                sessionStorage.setItem('lastPage', currentPage);
+            });
+
+            document.getElementById('backButton').addEventListener('click', () => {
+                window.history.back();
+            });
+        });
+    </script>
+</body>
+
+</html>

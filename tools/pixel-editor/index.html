@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur Pixel Art</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="editor-container">
+        <h1>Éditeur Pixel Art</h1>
+        
+        <div class="project-info">
+            <h2 id="projectTitle">Nouveau projet</h2>
+        </div>
+        
+        <div class="toolbar">
+            <div class="color-palette">
+                <input type="color" id="colorPicker" value="#000000">
+                <div class="preset-colors">
+                    <button class="color-btn" style="background-color: #000000"></button>
+                    <button class="color-btn" style="background-color: #FFFFFF"></button>
+                    <button class="color-btn" style="background-color: #FF0000"></button>
+                    <button class="color-btn" style="background-color: #00FF00"></button>
+                    <button class="color-btn" style="background-color: #0000FF"></button>
+                    <button class="color-btn" style="background-color: #FFFF00"></button>
+                    <button class="color-btn" style="background-color: #FF00FF"></button>
+                    <button class="color-btn" style="background-color: #00FFFF"></button>
+                </div>
+            </div>
+            
+            <div class="tools">
+                <button id="clearBtn">Effacer tout</button>
+                <button id="previewBtn">Prévisualiser</button>
+                <button id="saveBtn">Sauvegarder</button>
+                <button id="loadBtn">Charger</button>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div id="pixelGrid"></div>
+        </div>
+
+        <div class="frames-container">
+            <button id="addFrameBtn">+ Nouvelle Frame</button>
+            <div id="framesList"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

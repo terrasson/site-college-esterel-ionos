@@ -1,0 +1,37 @@
+admin-diaporama.html:602 Initialisation de la page...
+admin-diaporama.html:389 Chargement de la configuration existante...
+admin-diaporama.html:397 Configuration chargée: Object
+admin-diaporama.html:414 Timeline data mise à jour: Object
+admin-diaporama.html:495 Mise à jour de l'affichage pour la section: cuisine Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:510 Chargement des médias pour la section: cuisine
+admin-diaporama.html:518 Photos chargées: Array(15)
+admin-diaporama.html:544 Documents chargés: Array(0)
+admin-diaporama.html:587 Changement de section vers: direction
+admin-diaporama.html:510 Chargement des médias pour la section: direction
+admin-diaporama.html:495 Mise à jour de l'affichage pour la section: direction Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:807 Ajout du média à la timeline: Object
+admin-diaporama.html:518 Photos chargées: Array(5)
+admin-diaporama.html:566 Erreur lors du chargement des médias: Error: Erreur lors du chargement des documents: 404
+    at loadAvailableMedia (admin-diaporama.html:541:27)
+loadAvailableMedia @ admin-diaporama.html:566
+admin-diaporama.html:763 Mise à jour des données de la timeline: Array(2)
+admin-diaporama.html:763 Mise à jour des données de la timeline: Array(1)
+admin-diaporama.html:763 Mise à jour des données de la timeline: Array(0)
+admin-diaporama.html:648 Drop détecté
+admin-diaporama.html:665 Erreur lors du drop: SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at HTMLDivElement.handleDrop (admin-diaporama.html:651:35)
+handleDrop @ admin-diaporama.html:665
+admin-diaporama.html:648 Drop détecté
+admin-diaporama.html:665 Erreur lors du drop: SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at HTMLDivElement.handleDrop (admin-diaporama.html:651:35)
+handleDrop @ admin-diaporama.html:665

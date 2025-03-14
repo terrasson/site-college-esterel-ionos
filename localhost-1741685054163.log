@@ -1,0 +1,4 @@
+admin-photos-direction.html:195 Script chargé !
+admin-photos-direction.html:1 Uncaught ReferenceError: deletePhoto is not defined
+    at HTMLButtonElement.onclick (admin-photos-direction.html:1:1)
+onclick @ admin-photos-direction.html:1

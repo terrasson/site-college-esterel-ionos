@@ -1,0 +1,92 @@
+{
+  "cuisine": {
+    "medias": [
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/cuisine/cuisine_1740897049152-qY09gYUhQu96lZ0uTDQi8q3a2f5X1X.webp",
+        "name": "cuisine_1740897049152.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      },
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/cuisine/cuisine_1740897047615-lm4KRcuo26cJMT17SQTcCHr4PEKFl0.webp",
+        "name": "cuisine_1740897047615.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "ça bosse dur 💪",
+        "textPosition": "top-left",
+        "enabled": true
+      }
+    ],
+    "schedules": []
+  },
+  "direction": {
+    "medias": [
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/direction/direction_1740897520809-oUGYJW9Dk88bfz9IoxtgW8CbNZnO0V.webp",
+        "name": "direction_1740897520809.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      },
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/direction/direction_1740897520021-HTbutI0RvdSInx40r2o8GM87ePZzSl.webp",
+        "name": "direction_1740897520021.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      },
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/direction/direction_1740897517958-WB3ymr7PW9wax9y1NuWfOEyMYwQtuo.webp",
+        "name": "direction_1740897517958.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      },
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/direction/direction_1740897518939-gyjkc8bVYFH5DJmoifErju0mli0G9o.webp",
+        "name": "direction_1740897518939.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      },
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/direction/direction_1740897521344-GbfgbyYL8A0HsqDxQYicItY6hxDitS.webp",
+        "name": "direction_1740897521344.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      },
+      {
+        "type": "image",
+        "path": "https://t26k4175ebfke86p.public.blob.vercel-storage.com/direction/direction_1740897520021-HTbutI0RvdSInx40r2o8GM87ePZzSl.webp",
+        "name": "direction_1740897520021.webp",
+        "duration": 5,
+        "transition": "fade",
+        "comment": "",
+        "textPosition": "top-left",
+        "enabled": true
+      }
+    ],
+    "schedules": []
+  }
+}

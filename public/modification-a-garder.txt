@@ -1,0 +1,105 @@
+=== MODIFICATIONS POUR ADMIN-PHOTOS-CUISINE.HTML ET ADMIN-PHOTOS-DIRECTION.HTML ===
+
+1. FONCTION DE ROTATION DES PHOTOS :
+```javascript
+async function rotatePhoto(filename, degrees) {
+    try {
+        const response = await fetch('/api/rotate-photo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                filename: filename,
+                type: 'cuisine', // ou 'direction' selon le fichier
+                degrees: degrees
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la rotation');
+        }
+
+        await loadPhotos(); // Recharger les photos après la rotation
+        showStatus('Photo pivotée avec succès', true);
+    } catch (error) {
+        console.error('Erreur:', error);
+        showStatus('Erreur lors de la rotation de la photo', false);
+    }
+}
+```
+
+2. BOUTONS DE ROTATION DANS LE HTML :
+```html
+<button onclick="rotatePhoto('${photo.filename}', -90)">⟲</button>
+<button onclick="rotatePhoto('${photo.filename}', 90)">⟳</button>
+```
+
+3. FONCTION DELETE PHOTO :
+```javascript
+async function deletePhoto(filename) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/cuisine-photos/${filename}`, { // ou direction-photos
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression');
+        }
+
+        await loadPhotos();
+        showStatus('Photo supprimée avec succès', true);
+    } catch (error) {
+        console.error('Erreur:', error);
+        showStatus('Erreur lors de la suppression de la photo', false);
+    }
+}
+```
+
+4. FONCTION SHOW STATUS :
+```javascript
+function showStatus(message, isSuccess) {
+    const statusDiv = document.getElementById('status');
+    statusDiv.textContent = message;
+    statusDiv.className = isSuccess ? 'success' : 'error';
+    statusDiv.style.display = 'block';
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+    }, 3000);
+}
+```
+
+5. DIV POUR LE STATUS DANS LE HTML :
+```html
+<div id="status" style="display: none;"></div>
+```
+
+6. CSS POUR LE STATUS :
+```css
+#status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+}
+#status.success {
+    background-color: #4CAF50;
+    color: white;
+}
+#status.error {
+    background-color: #f44336;
+    color: white;
+}
+```
+```
+
+Après avoir sauvegardé ces modifications :
+1. Faites le `git pull`
+2. Réappliquez ces modifications aux deux fichiers admin-photos
+3. Dites-moi quand c'est fait pour qu'on puisse passer à la correction du problème d'affichage dynamique

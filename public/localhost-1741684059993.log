@@ -1,0 +1,5 @@
+admin-photos-cuisine.html:275 URL de suppression: /api/cuisine-photos/cuisine_1740467089432.webp
+admin-photos-cuisine.html:1 [Violation] 'click' handler took 1240ms
+admin-photos-cuisine.html:284 Status de la réponse: 200
+admin-photos-cuisine.html:286 Réponse du serveur: {message: 'Photo supprimée avec succès'}
+admin-photos-cuisine.html:290 Photos rechargées

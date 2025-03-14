@@ -1,0 +1,9 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: url(./assets/img/bg.jpeg) center/cover;
+  /*vh = 100% de la taille de l'ecran(viewport height)*/
+  min-height: 100vh;
+}

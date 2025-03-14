@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Diaporamas</title>
+    <link rel="stylesheet" href="/styles/common.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --error-color: #e74c3c;
+            --border-color: #ddd;
+            --bg-color: #f5f6fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-tabs {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: var(--primary-color);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn.active {
+            background: var(--secondary-color);
+        }
+
+        .media-windows {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .media-window {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .media-window h3 {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-color);
+            border-radius: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .media-item {
+            background: white;
+            border-radius: 8px;
+            padding: 0.8rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: move;
+        }
+
+        .media-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .preview-container {
+            position: relative;
+            width: 200px;
+            height: 120px;
+        }
+
+        .preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-name {
+            font-size: 0.9rem;
+            color: #333;
+            text-align: center;
+            margin-top: 0.5rem;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+
+        .media-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .media-type {
+            padding: 0.2rem 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            align-self: flex-start;
+        }
+
+        /* Style pour la barre de défilement */
+        .media-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .media-grid::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 4px;
+        }
+
+        .media-grid::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .media-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Style pour le drag and drop */
+        .media-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .timeline-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-item img {
+            max-width: 100px;
+            max-height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .timeline {
+            border: 2px dashed var(--border-color);
+            min-height: 200px;
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 8px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .controls-container {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .save-btn {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            color: white;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: var(--secondary-color);
+        }
+
+        .notification.error {
+            background: var(--error-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .timeline-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: move;
+        }
+
+        .timeline-item.dragging {
+            opacity: 0.5;
+        }
+
+        .timeline-item-content {
+            position: relative;
+        }
+
+        .timeline-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .media-item.dragging {
+            opacity: 0.5;
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .remove-btn:hover {
+            background: #c0392b;
+        }
+
+        .timeline-item-content {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .duration-input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .transition-select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 120px;
+        }
+
+        .comment-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .text-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .font-select, .position-select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .font-size-input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .preview-text {
+            position: absolute;
+            padding: 5px;
+            border-radius: 4px;
+            max-width: 90%;
+            word-wrap: break-word;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .preview-text.top-left {
+            top: 5px;
+            left: 5px;
+        }
+
+        .preview-text.top-right {
+            top: 5px;
+            right: 5px;
+        }
+
+        .preview-text.center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .preview-text.bottom-left {
+            bottom: 5px;
+            left: 5px;
+        }
+
+        .preview-text.bottom-right {
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .emoji-picker {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .emoji-picker span {
+            cursor: pointer;
+            padding: 5px;
+            text-align: center;
+            transition: transform 0.1s;
+        }
+
+        .emoji-picker span:hover {
+            transform: scale(1.2);
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="backButton" class="back-button">← Retour</button>
+    <div class="container">
+        <h1>Gestion des Diaporamas</h1>
+
+        <div class="section-tabs">
+            <button class="btn" onclick="switchSection('cuisine')" id="btn-cuisine">Diaporama Cuisine</button>
+            <button class="btn" onclick="switchSection('direction')" id="btn-direction">Diaporama Direction</button>
+        </div>
+
+        <div class="media-windows">
+            <!-- Photos -->
+            <div class="media-window">
+                <h3>Photos</h3>
+                <div class="media-grid" id="photos-grid">
+                    <!-- Les photos seront injectées ici par JavaScript -->
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="media-window">
+                <h3>Documents</h3>
+                <div class="media-grid" id="documents-grid">
+                    <!-- Les documents seront injectés ici par JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-container">
+            <h2>Timeline</h2>
+            <div class="timeline" id="timeline"></div>
+        </div>
+
+        <div class="controls-container">
+            <button class="btn save-btn" onclick="saveTimeline()">Enregistrer le diaporama</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 'cuisine';
+        let timelineData = {
+            cuisine: { medias: [], schedules: [] },
+            direction: { medias: [], schedules: [] }
+        };
+
+        // Fonction pour charger la configuration existante
+        async function loadExistingConfig() {
+            try {
+                console.log('Chargement de la configuration existante...');
+                const response = await fetch('/api/diaporama-config');
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+
+                const config = await response.json();
+                console.log('Configuration chargée:', config);
+
+                if (config.error) {
+                    throw new Error(config.error);
+                }
+
+                if (!config.cuisine || !config.direction) {
+                    console.warn('Configuration invalide:', config);
+                    throw new Error('Format de configuration invalide');
+                }
+
+                // Initialiser avec une configuration vide si nécessaire
+                timelineData = {
+                    cuisine: config.cuisine || { medias: [], schedules: [] },
+                    direction: config.direction || { medias: [], schedules: [] }
+                };
+
+                console.log('Timeline data mise à jour:', timelineData);
+
+                // Mettre à jour l'affichage
+                updateTimelineDisplay();
+
+            } catch (error) {
+                console.error('Erreur lors du chargement de la configuration:', error);
+                // Initialiser avec une configuration vide en cas d'erreur
+                timelineData = {
+                    cuisine: { medias: [], schedules: [] },
+                    direction: { medias: [], schedules: [] }
+                };
+                showNotification('Erreur lors du chargement de la configuration. Une nouvelle configuration vide a été créée.', 'error');
+                updateTimelineDisplay();
+            }
+        }
+
+        // Fonction pour sauvegarder la timeline
+        async function saveTimeline() {
+            try {
+                // Mettre à jour les données avant la sauvegarde
+                updateTimelineData();
+
+                console.log('Données à sauvegarder:', timelineData);
+
+                const response = await fetch('/api/diaporama-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cuisine: {
+                            medias: timelineData.cuisine.medias.map(media => ({
+                                type: media.type,
+                                path: media.path,
+                                name: media.name,
+                                duration: parseInt(media.duration) || 5,
+                                transition: media.transition || 'fade',
+                                comment: media.comment || '',
+                                textPosition: media.textPosition || 'top-left',
+                                enabled: true
+                            })),
+                            schedules: []
+                        },
+                        direction: {
+                            medias: timelineData.direction.medias.map(media => ({
+                                type: media.type,
+                                path: media.path,
+                                name: media.name,
+                                duration: parseInt(media.duration) || 5,
+                                transition: media.transition || 'fade',
+                                comment: media.comment || '',
+                                textPosition: media.textPosition || 'top-left',
+                                enabled: true
+                            })),
+                            schedules: []
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la sauvegarde');
+                }
+
+                const result = await response.json();
+                console.log('Résultat de la sauvegarde:', result);
+                showNotification('Diaporama sauvegardé avec succès', 'success');
+
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde:', error);
+                showNotification('Erreur lors de la sauvegarde: ' + error.message, 'error');
+            }
+        }
+
+        // Fonction pour mettre à jour l'affichage de la timeline
+        function updateTimelineDisplay() {
+            const timeline = document.getElementById('timeline');
+            if (!timeline) {
+                console.error('Timeline element not found');
+                return;
+            }
+
+            timeline.innerHTML = ''; // Vider la timeline actuelle
+
+            const currentData = timelineData[currentSection];
+            console.log('Mise à jour de l\'affichage pour la section:', currentSection, currentData);
+
+            if (currentData && currentData.medias && Array.isArray(currentData.medias)) {
+                currentData.medias.forEach(media => {
+                    if (media) {
+                        addMediaToTimeline(media);
+                    }
+                });
+            }
+        }
+
+        // Fonction pour charger les médias disponibles
+        async function loadAvailableMedia() {
+            try {
+                const section = currentSection;
+                console.log('Chargement des médias pour la section:', section);
+
+                // Charger les photos
+                const photosResponse = await fetch(`/api/${section}-photos`);
+                if (!photosResponse.ok) {
+                    throw new Error(`Erreur lors du chargement des photos: ${photosResponse.status}`);
+                }
+                const photos = await photosResponse.json();
+                console.log('Photos chargées:', photos);
+
+                // Mettre à jour l'affichage des photos
+                const photosGrid = document.getElementById('photos-grid');
+                photosGrid.innerHTML = photos.map(photo => `
+                    <div class="media-item" draggable="true" 
+                         data-type="image" 
+                         data-path="${photo.url}" 
+                         data-name="${photo.filename}">
+                        <div class="preview-container">
+                            <img src="${photo.url}" alt="${photo.filename}">
+                        </div>
+                        <div class="media-info">
+                            <div class="media-name">${photo.filename}</div>
+                            <span class="media-type">Image</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                try {
+                    // Charger les documents (menus)
+                    const documentsResponse = await fetch(`/api/menu-${section}`);
+                    const documents = await documentsResponse.json();
+                    console.log('Documents chargés:', documents);
+
+                    const documentsGrid = document.getElementById('documents-grid');
+                    documentsGrid.innerHTML = documents.map(doc => `
+                        <div class="media-item" draggable="true" 
+                             data-type="document" 
+                             data-path="/assets/data/menu-${section}/${doc.filename}" 
+                             data-name="${doc.filename}">
+                            <div class="preview-container document-preview">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">${doc.originalName || doc.filename}</div>
+                                <span class="media-type">Document</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (docError) {
+                    console.log('Pas de documents disponibles pour cette section');
+                    document.getElementById('documents-grid').innerHTML = '<p>Aucun document disponible</p>';
+                }
+
+                // Ajouter les événements de drag and drop
+                initializeDragAndDrop();
+
+            } catch (error) {
+                console.error('Erreur lors du chargement des médias:', error);
+                showNotification('Erreur lors du chargement des médias', 'error');
+            }
+        }
+
+        // Fonction pour initialiser le drag and drop
+        function initializeDragAndDrop() {
+            const mediaItems = document.querySelectorAll('.media-item');
+            const timeline = document.getElementById('timeline');
+
+            mediaItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+
+            timeline.addEventListener('dragover', handleDragOver);
+            timeline.addEventListener('drop', handleDrop);
+        }
+
+        // Mettre à jour la fonction switchSection pour recharger les médias
+        function switchSection(section) {
+            console.log('Changement de section vers:', section);
+            currentSection = section;
+
+            // Mettre à jour l'apparence des boutons
+            document.getElementById('btn-cuisine').classList.toggle('active', section === 'cuisine');
+            document.getElementById('btn-direction').classList.toggle('active', section === 'direction');
+
+            // Charger les médias de la nouvelle section
+            loadAvailableMedia();
+            // Mettre à jour l'affichage de la timeline
+            updateTimelineDisplay();
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Initialisation de la page...');
+            validateTimelineData();
+            await loadExistingConfig();
+            await loadAvailableMedia();
+
+            // Ajouter les écouteurs d'événements pour la timeline
+            const timeline = document.getElementById('timeline');
+            timeline.addEventListener('dragover', handleDragOver);
+            timeline.addEventListener('drop', handleDrop);
+        });
+
+        // Fonction pour vider la timeline
+        function clearTimeline() {
+            console.log('Nettoyage de la timeline pour la section:', currentSection);
+            timelineData[currentSection] = { medias: [], schedules: [] };
+            updateTimelineDisplay();
+        }
+
+        // Ajouter un bouton pour vider la timeline
+        document.querySelector('.controls-container').innerHTML += `
+            <button class="btn clear-btn" onclick="clearTimeline()">Vider le diaporama</button>
+        `;
+
+        // Fonctions de gestion du drag and drop
+        function handleDragStart(e) {
+            console.log('Début du glisser:', this.dataset.name);
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                type: this.dataset.type,
+                path: this.dataset.path,
+                name: this.dataset.name
+            }));
+            this.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            console.log('Fin du glisser');
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); // Nécessaire pour autoriser le drop
+            e.dataTransfer.dropEffect = 'copy';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            console.log('Drop détecté');
+
+            try {
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                console.log('Données du drop:', data);
+
+                // Créer l'élément dans la timeline
+                const mediaElement = createTimelineElement(data);
+
+                // Ajouter à la timeline
+                const timeline = document.getElementById('timeline');
+                timeline.appendChild(mediaElement);
+
+                // Mettre à jour les données
+                updateTimelineData();
+
+            } catch (error) {
+                console.error('Erreur lors du drop:', error);
+            }
+        }
+
+        // Fonction pour créer un élément dans la timeline
+        function createTimelineElement(data) {
+            const element = document.createElement('div');
+            element.className = 'timeline-item';
+            element.draggable = true;
+
+            element.innerHTML = `
+                <div class="timeline-item-content">
+                    <div class="preview-container">
+                        ${data.type === 'image'
+                            ? `<img src="${data.path}" alt="${data.name}">`
+                            : `<div class="document-preview" data-path="${data.path}">
+                                 <i class="fas fa-file-alt"></i>
+                               </div>`
+                        }
+                    </div>
+                    <div class="media-name">${data.name}</div>
+                    <div class="timeline-controls">
+                        <input type="number" value="${data.duration || 5}" min="1" max="60" 
+                            class="duration-input" title="Durée (secondes)">
+                        <select class="transition-select" title="Type de transition">
+                            <option value="fade" ${data.transition === 'fade' ? 'selected' : ''}>Fondu</option>
+                            <option value="slide" ${data.transition === 'slide' ? 'selected' : ''}>Glissement</option>
+                            <option value="zoom" ${data.transition === 'zoom' ? 'selected' : ''}>Zoom</option>
+                            <option value="spiral" ${data.transition === 'spiral' ? 'selected' : ''}>Spirale</option>
+                        </select>
+                        <button class="remove-btn" onclick="removeTimelineItem(this)" title="Supprimer">×</button>
+                    </div>
+                    <div class="comment-controls">
+                        <input type="text" class="comment-input" 
+                            placeholder="Ajouter un commentaire" 
+                            value="${data.comment || ''}" 
+                            title="Commentaire">
+                        <div class="text-controls">
+                            <select class="font-select">
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Verdana">Verdana</option>
+                            </select>
+                            <input type="number" class="font-size-input" 
+                                value="${data.fontSize || '24'}" 
+                                min="16" max="72" 
+                                title="Taille de police">
+                            <input type="color" class="color-picker" 
+                                value="${data.textColor || '#ffffff'}" 
+                                title="Couleur du texte">
+                            <select class="position-select">
+                                <option value="top-left">Haut Gauche</option>
+                                <option value="top-right">Haut Droite</option>
+                                <option value="center">Centre</option>
+                                <option value="bottom-left">Bas Gauche</option>
+                                <option value="bottom-right">Bas Droite</option>
+                            </select>
+                            <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return element;
+        }
+
+        // Fonction pour mettre à jour la prévisualisation
+        function updatePreview(element) {
+            const timelineItem = element.closest('.timeline-item-content');
+            const previewText = timelineItem.querySelector('.preview-text');
+            const commentInput = timelineItem.querySelector('.comment-input');
+            const fontSelect = timelineItem.querySelector('.font-select');
+            const fontSizeInput = timelineItem.querySelector('.font-size-input');
+            const colorPicker = timelineItem.querySelector('.color-picker');
+            const positionSelect = timelineItem.querySelector('.position-select');
+
+            previewText.textContent = commentInput.value;
+            previewText.style.fontFamily = fontSelect.value;
+            previewText.style.fontSize = `${fontSizeInput.value}px`;
+            previewText.style.color = colorPicker.value;
+            
+            previewText.className = 'preview-text ' + positionSelect.value;
+        }
+
+        // Fonction pour mettre à jour les données de la timeline
+        function updateTimelineData() {
+            const timeline = document.getElementById('timeline');
+            const items = [...timeline.querySelectorAll('.timeline-item')].map(item => {
+                const content = item.querySelector('.timeline-item-content');
+                return {
+                    type: content.querySelector('.document-preview') ? 'document' : 'image',
+                    path: content.querySelector('img')?.src || content.querySelector('.document-preview')?.dataset.path,
+                    name: content.querySelector('.media-name').textContent,
+                    duration: parseInt(content.querySelector('.duration-input').value),
+                    transition: content.querySelector('.transition-select').value,
+                    comment: content.querySelector('.comment-input').value,
+                    fontFamily: content.querySelector('.font-select').value,
+                    fontSize: content.querySelector('.font-size-input').value,
+                    textColor: content.querySelector('.color-picker').value,
+                    textPosition: content.querySelector('.position-select').value
+                };
+            });
+
+            timelineData[currentSection].medias = items;
+        }
+
+        // Fonction pour afficher les notifications
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Ajouter une fonction pour vérifier la structure des données
+        function validateTimelineData() {
+            if (!timelineData) {
+                timelineData = {
+                    cuisine: { medias: [], schedules: [] },
+                    direction: { medias: [], schedules: [] }
+                };
+            }
+
+            if (!timelineData.cuisine) {
+                timelineData.cuisine = { medias: [], schedules: [] };
+            }
+
+            if (!timelineData.direction) {
+                timelineData.direction = { medias: [], schedules: [] };
+            }
+
+            if (!Array.isArray(timelineData.cuisine.medias)) {
+                timelineData.cuisine.medias = [];
+            }
+
+            if (!Array.isArray(timelineData.direction.medias)) {
+                timelineData.direction.medias = [];
+            }
+        }
+
+        // Fonction pour ajouter un média à la timeline
+        function addMediaToTimeline(media) {
+            console.log('Ajout du média à la timeline:', media);
+            const timeline = document.getElementById('timeline');
+
+            const element = document.createElement('div');
+            element.className = 'timeline-item';
+            element.draggable = true;
+
+            element.innerHTML = `
+                <div class="timeline-item-content">
+                    ${media.type === 'image'
+                    ? `<img src="${media.path}" alt="${media.name}" style="max-height: 50px;">`
+                    : `<div class="document-preview"><i class="fas fa-file-alt"></i></div>`
+                }
+                    <div class="media-name">${media.name}</div>
+                    <div class="timeline-controls">
+                        <input type="number" value="${media.duration || 5}" min="1" max="60" 
+                            class="duration-input" title="Durée (secondes)">
+                        <select class="transition-select" title="Type de transition">
+                            <option value="fade" ${media.transition === 'fade' ? 'selected' : ''}>Fondu</option>
+                            <option value="slide" ${media.transition === 'slide' ? 'selected' : ''}>Glissement</option>
+                            <option value="zoom" ${media.transition === 'zoom' ? 'selected' : ''}>Zoom</option>
+                            <option value="spiral" ${media.transition === 'spiral' ? 'selected' : ''}>Spirale</option>
+                        </select>
+                        <button class="remove-btn" onclick="removeTimelineItem(this)" title="Supprimer">×</button>
+                    </div>
+                    <div class="comment-controls">
+                        <input type="text" class="comment-input" placeholder="Ajouter un commentaire" 
+                            value="${media.comment || ''}" title="Commentaire">
+                        <select class="position-select" title="Position du texte">
+                            <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
+                            <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
+                            <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
+                            <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
+                            <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
+                        </select>
+                        <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
+                    </div>
+                </div>
+            `;
+
+            // Ajouter les événements de drag and drop
+            element.addEventListener('dragstart', handleTimelineItemDragStart);
+            element.addEventListener('dragend', handleTimelineItemDragEnd);
+
+            timeline.appendChild(element);
+        }
+
+        // Ajout des nouvelles fonctions pour gérer les emojis
+        function toggleEmojiPicker(button) {
+            const existingPicker = document.querySelector('.emoji-picker');
+            if (existingPicker) {
+                existingPicker.remove();
+                return;
+            }
+
+            const picker = document.createElement('div');
+            picker.className = 'emoji-picker';
+            const emojis = ['😊', '😂', '❤️', '👍', '🎉', '⭐', '🔥', '💪', '👏', '🌟', 
+                            '🎨', '🎭', '🎪', '🎟️', '🎫', '🎗️', '🎖️', '🏆', '📚', '✏️',
+                            '📖', '🎓', '🎒', '🏫', '🏢', '🏡', '🌺', '🌸', '🌼', '🌻',
+                            '🌞', '🌈', '☀️', '⭐', '✨', '💫'];
+            
+            picker.innerHTML = emojis.map(emoji => 
+                `<span onclick="addEmoji('${emoji}', this)">${emoji}</span>`
+            ).join('');
+
+            const controls = button.closest('.text-controls');
+            controls.appendChild(picker);
+        }
+
+        function addEmoji(emoji, element) {
+            const timelineItem = element.closest('.timeline-item-content');
+            const commentInput = timelineItem.querySelector('.comment-input');
+            commentInput.value += emoji;
+            updatePreview(commentInput);
+            element.closest('.emoji-picker').remove();
+        }
+
+        // Fonctions pour la réorganisation dans la timeline
+        function handleTimelineItemDragStart(e) {
+            e.dataTransfer.setData('text/plain', 'timeline-item');
+            this.classList.add('dragging');
+        }
+
+        function handleTimelineItemDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleTimelineItemDragOver(e) {
+            e.preventDefault();
+            const draggingItem = document.querySelector('.timeline-item.dragging');
+            if (draggingItem && draggingItem !== this) {
+                const timeline = document.getElementById('timeline');
+                const siblings = [...timeline.querySelectorAll('.timeline-item:not(.dragging)')];
+                const nextSibling = siblings.find(sibling => {
+                    const rect = sibling.getBoundingClientRect();
+                    return e.clientY < rect.top + rect.height / 2;
+                });
+
+                if (nextSibling) {
+                    timeline.insertBefore(draggingItem, nextSibling);
+                } else {
+                    timeline.appendChild(draggingItem);
+                }
+            }
+        }
+
+        function handleTimelineItemDrop(e) {
+            e.preventDefault();
+            updateTimelineData();
+        }
+
+        // Fonction pour supprimer un élément de la timeline
+        function removeTimelineItem(button) {
+            const timelineItem = button.closest('.timeline-item');
+            timelineItem.remove();
+            updateTimelineData();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('backButton').addEventListener('click', () => {
+                window.history.back();
+            });
+        });
+    </script>
+</body>
+
+</html>

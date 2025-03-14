@@ -1,0 +1,42 @@
+Lancer en local en mode debug (sauvegarder un changement sera automatiquement pris en compte): 
+    npx nodemon --ignore 'data/*' server.js
+
+Ctrl + S = sauvegarder un fichier
+Ctrl + C dans le terminal = stopper le serveur
+
+Pousser sur git (dans Power Shell)
+- git add .
+- git commit -m "insérer un message explicatif"
+- git push
+
+Retirer sur git
+- git pull
+
+Ctrl + L : Ouvrir le chat de Cursor
+
+Pour visualiser le site en local taper dans la barre d'adresse : http://localhost:3000/
+
+Site web : https://site-college.vercel.app/
+shift + entrée dans le chat= pour allé a la ligne pour bien detailler les instructions 
+
+Pour telecharger depuis github :
+-git pull
+
+Pour telecharger depuis github en mettant de coté mes fichier locaux : 
+# Stocker temporairement vos modifications
+-git stash
+-git pull
+-git stash pop  # Pour récupérer vos modifications
+
+Créé un dossier sur le disque dur :
+-mkdir nom_du_dossier
+
+Allé quelque par dans un dossier :
+-cd nom_du_dossier
+tout d'abord on tape :
+pwd = pour voir ou on est
+puis on tape :
+cd /Users/votre_nom_utilisateur/Documents 
+
+demarrer le server vercel: npm run start
+

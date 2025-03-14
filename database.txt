@@ -1,0 +1,15 @@
+Comment choisir ?
+=> demande à Perplexity avec tes spécifications (quel langage tu utilises pour coder, sur quoi tu déploies ton app, gratuit ou payant, etc...)
+
+Pour nous : 
+=> Vercel Blob Storage
+C'est un storage gratuit (au début) et scalable, intégré à Vercel (la plateforme de déploiement que nous utilisons)
+
+Attention : il faudra nettoyer les fichiers inutiles régulièrement sinon cela va devenir payant au bout d'un moment.
+
+Les fichiers sont visibles depuis l'interface de Vercel dans "Storage".
+
+J'ai changé la plupart du code qui utilisait un storage local pour utiliser le storage Vercel. Tu n'aurais plus besoin des fichiers en local (à supprimer).
+
+Bugs à corriger :
+- L'upload de fichiers PDF change le nom du fichier et la supression ne fonctionne pas car il prend l'ancien nom (admin-documents-direction.html)

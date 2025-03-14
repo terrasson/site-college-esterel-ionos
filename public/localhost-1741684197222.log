@@ -1,0 +1,13 @@
+admin-photos-cuisine.html:248 Début du chargement des photos
+admin-photos-cuisine.html:250 Réponse reçue du serveur
+admin-photos-cuisine.html:253 Photos reçues: (18) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin-photos-cuisine.html:262 Affichage mis à jour
+admin-photos-cuisine.html:274 URL de suppression: /api/cuisine-photos/cuisine_1740467089432.webp
+admin-photos-cuisine.html:1 [Violation] 'click' handler took 1291ms
+admin-photos-cuisine.html:283 Status de la réponse: 200
+admin-photos-cuisine.html:285 Réponse du serveur: {message: 'Photo supprimée avec succès'}
+admin-photos-cuisine.html:248 Début du chargement des photos
+admin-photos-cuisine.html:250 Réponse reçue du serveur
+admin-photos-cuisine.html:253 Photos reçues: (18) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin-photos-cuisine.html:262 Affichage mis à jour
+admin-photos-cuisine.html:289 Photos rechargées

@@ -1,0 +1,35 @@
+{
+  "items": [
+    {
+      "path": "http://localhost:3000/assets/img/cuisine/cuisine_1736950716875.webp",
+      "type": "image",
+      "name": "cuisine_1736950716875.webp",
+      "startTime": "00:00",
+      "duration": 5,
+      "transition": "fade"
+    },
+    {
+      "path": "http://localhost:3000/assets/img/cuisine/cuisine_1736952106759.webp",
+      "type": "image",
+      "name": "cuisine_1736952106759.webp",
+      "startTime": "00:00",
+      "duration": 5,
+      "transition": "fade"
+    },
+    {
+      "type": "document",
+      "name": "menu_1737019993661-98041412_Menus_Colleges_gÃ©nÃ©riques_2024_2025_modÃ¨le.pdf",
+      "startTime": "00:00",
+      "duration": 5,
+      "transition": "fade"
+    },
+    {
+      "path": "http://localhost:3000/assets/img/cuisine/cuisine_1736952106944.webp",
+      "type": "image",
+      "name": "cuisine_1736952106944.webp",
+      "startTime": "00:00",
+      "duration": 5,
+      "transition": "fade"
+    }
+  ]
+}
