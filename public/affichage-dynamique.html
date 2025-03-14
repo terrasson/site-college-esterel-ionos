@@ -214,6 +214,14 @@
             height: 45vh;
             margin: 10px 0;
         }
+
+        .banner-right {
+            gap: 10px;
+        }
+        
+        .logo img {
+            max-height: 40px;
+        }
     }
 
     /* Style spécifique pour le bouton invisible */
@@ -286,6 +294,19 @@
         pointer-events: none;
         transition: opacity 0.5s ease-in-out;
     }
+
+    .banner-right {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo img {
+      max-height: 60px;
+      width: auto;
+      object-fit: contain;
+    }
   </style>
 </head>
 
@@ -338,9 +359,6 @@
       <div class="banner-right">
         <a href="#" class="logo">
           <img src="/assets/img/logo-ministere-education.png" alt="Logo Education national" />
-        </a>
-        <a href="#" class="logo">
-          <img src="/assets/img/Logo-saint-raphaël.png" alt="Logo Saint-Raphaël" />
         </a>
         <a href="#" class="logo">
           <img src="/assets/img/logo-departement.png" alt="Logo Departement" />
