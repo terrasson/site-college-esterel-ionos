@@ -1,0 +1,169 @@
+affichage-dynamique.html:331 [Violation] Avoid using document.write(). https://developers.google.com/web/updates/2016/08/removing-document-write
+(anonymous) @ affichage-dynamique.html:331
+affichage-dynamique.html:629 Initialisation du diaporama...
+affichage-dynamique.html:503 Chargement des configurations...
+affichage-dynamique.html:506 Configurations reçues: {cuisine: {…}, direction: {…}}
+affichage-dynamique.html:516 Démarrage diaporama cuisine avec 9 médias
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 0
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897047615.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897047615-zFEnYCkQO4B2mSrgb7gRgwGWQ38to5.webp', name: 'cuisine_1740897047615.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:526 Démarrage diaporama direction avec 6 médias
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 0
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897520809.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897520809-oUGYJW9Dk88bfz9IoxtgW8CbNZnO0V.webp', name: 'direction_1740897520809.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 1
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 1
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897046363.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897046363-pkBO4UBxiTJteQLBMmNpIlKnKqZvoK.webp', name: 'cuisine_1740897046363.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 1
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 1
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897520021.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897520021-HTbutI0RvdSInx40r2o8GM87ePZzSl.webp', name: 'direction_1740897520021.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 2
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 2
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897043667.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897043667-8fcULEg6h13hx5cagOQWn6vXRF7BJJ.webp', name: 'cuisine_1740897043667.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 2
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 2
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897517958.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897517958-WB3ymr7PW9wax9y1NuWfOEyMYwQtuo.webp', name: 'direction_1740897517958.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 3
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 3
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897045532.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897045532-dJmFTW90A5ziDhatwR20wWCCJZj7t9.webp', name: 'cuisine_1740897045532.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 3
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 3
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897518939.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897518939-gyjkc8bVYFH5DJmoifErju0mli0G9o.webp', name: 'direction_1740897518939.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 4
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 4
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897051996.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897051996-XyGPIRKXBWbTKrVYya3CBGF8lV0ZnM.webp', name: 'cuisine_1740897051996.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 4
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 4
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897521344.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897521344-GbfgbyYL8A0HsqDxQYicItY6hxDitS.webp', name: 'direction_1740897521344.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 5
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 5
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1741680634579.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1741680634579-AH2krNLNjLW6ysftqOS0wOLwmNBl5G.webp', name: 'cuisine_1741680634579.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 5
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 5
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897520021.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897520021-HTbutI0RvdSInx40r2o8GM87ePZzSl.webp', name: 'direction_1740897520021.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:503 Chargement des configurations...
+affichage-dynamique.html:506 Configurations reçues: {cuisine: {…}, direction: {…}}
+affichage-dynamique.html:516 Démarrage diaporama cuisine avec 9 médias
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 0
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897047615.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897047615-zFEnYCkQO4B2mSrgb7gRgwGWQ38to5.webp', name: 'cuisine_1740897047615.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:526 Démarrage diaporama direction avec 6 médias
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 0
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897520809.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897520809-oUGYJW9Dk88bfz9IoxtgW8CbNZnO0V.webp', name: 'direction_1740897520809.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 1
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 1
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897046363.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897046363-pkBO4UBxiTJteQLBMmNpIlKnKqZvoK.webp', name: 'cuisine_1740897046363.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 1
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 1
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897520021.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897520021-HTbutI0RvdSInx40r2o8GM87ePZzSl.webp', name: 'direction_1740897520021.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:611 Changement vers la photo suivante - Index: 2
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média cuisine:
+affichage-dynamique.html:545 Index actuel: 2
+affichage-dynamique.html:546 Total médias: 9
+affichage-dynamique.html:547 Nom du fichier: cuisine_1740897043667.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour cuisine: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897043667-8fcULEg6h13hx5cagOQWn6vXRF7BJJ.webp', name: 'cuisine_1740897043667.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes
+affichage-dynamique.html:615 Changement vers la photo suivante - Index: 2
+affichage-dynamique.html:543 ------------------------
+affichage-dynamique.html:544 Affichage média direction:
+affichage-dynamique.html:545 Index actuel: 2
+affichage-dynamique.html:546 Total médias: 6
+affichage-dynamique.html:547 Nom du fichier: direction_1740897517958.webp
+affichage-dynamique.html:548 ------------------------
+affichage-dynamique.html:557 Affichage du média pour direction: {type: 'image', path: 'https://t26k4175ebfke86p.public.blob.vercel-storag…1740897517958-WB3ymr7PW9wax9y1NuWfOEyMYwQtuo.webp', name: 'direction_1740897517958.webp', duration: 5, transition: 'fade', …}
+affichage-dynamique.html:606 Durée configurée: 5 secondes

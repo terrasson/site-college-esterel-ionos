@@ -559,8 +559,6 @@
                 // Gestion du texte overlay
                 if (media.comment && media.comment.trim() !== '') {
                     textOverlay.textContent = media.comment;
-                    
-                    // Application des styles de police
                     textOverlay.style.fontFamily = media.fontFamily || 'Arial';
                     textOverlay.style.fontSize = `${media.fontSize || '24'}px`;
                     textOverlay.style.color = media.textColor || '#ffffff';
@@ -570,7 +568,7 @@
                     textOverlay.style.maxWidth = '80%';
                     textOverlay.style.display = 'block';
                     textOverlay.style.position = 'absolute';
-                    
+
                     // Positionnement du texte
                     switch(media.textPosition) {
                         case 'top-left':
