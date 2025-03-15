@@ -541,7 +541,12 @@
                                 duration: parseInt(media.duration) || 5,
                                 transition: media.transition || 'fade',
                                 comment: media.comment || '',
+                                fontFamily: media.fontFamily || 'Arial',
+                                fontSize: parseInt(media.fontSize) || 24,
+                                textColor: media.textColor || '#ffffff',
                                 textPosition: media.textPosition || 'top-left',
+                                fontWeight: media.fontWeight || 'normal',
+                                fontStyle: media.fontStyle || 'normal',
                                 enabled: true
                             })),
                             schedules: []
@@ -554,7 +559,12 @@
                                 duration: parseInt(media.duration) || 5,
                                 transition: media.transition || 'fade',
                                 comment: media.comment || '',
+                                fontFamily: media.fontFamily || 'Arial',
+                                fontSize: parseInt(media.fontSize) || 24,
+                                textColor: media.textColor || '#ffffff',
                                 textPosition: media.textPosition || 'top-left',
+                                fontWeight: media.fontWeight || 'normal',
+                                fontStyle: media.fontStyle || 'normal',
                                 enabled: true
                             })),
                             schedules: []
@@ -796,21 +806,30 @@
                             value="${data.comment || ''}" 
                             title="Commentaire">
                         <div class="text-controls">
-                            <select class="font-select">
+                            <select class="font-select" title="Police">
                                 <option value="Arial">Arial</option>
                                 <option value="Times New Roman">Times New Roman</option>
                                 <option value="Helvetica">Helvetica</option>
                                 <option value="Georgia">Georgia</option>
                                 <option value="Verdana">Verdana</option>
                             </select>
+                            <select class="font-weight-select" title="Graisse">
+                                <option value="normal">Normal</option>
+                                <option value="bold">Gras</option>
+                                <option value="lighter">Fin</option>
+                            </select>
+                            <select class="font-style-select" title="Style">
+                                <option value="normal">Normal</option>
+                                <option value="italic">Italique</option>
+                            </select>
                             <input type="number" class="font-size-input" 
                                 value="${data.fontSize || '24'}" 
                                 min="16" max="72" 
-                                title="Taille de police">
+                                title="Taille">
                             <input type="color" class="color-picker" 
                                 value="${data.textColor || '#ffffff'}" 
-                                title="Couleur du texte">
-                            <select class="position-select">
+                                title="Couleur">
+                            <select class="position-select" title="Position">
                                 <option value="top-left">Haut Gauche</option>
                                 <option value="top-right">Haut Droite</option>
                                 <option value="center">Centre</option>
@@ -857,9 +876,11 @@
                     transition: content.querySelector('.transition-select').value,
                     comment: content.querySelector('.comment-input').value,
                     fontFamily: content.querySelector('.font-select').value,
-                    fontSize: content.querySelector('.font-size-input').value,
+                    fontSize: parseInt(content.querySelector('.font-size-input').value),
                     textColor: content.querySelector('.color-picker').value,
-                    textPosition: content.querySelector('.position-select').value
+                    textPosition: content.querySelector('.position-select').value,
+                    fontWeight: content.querySelector('.font-weight-select')?.value || 'normal',
+                    fontStyle: content.querySelector('.font-style-select')?.value || 'normal'
                 };
             });
 
@@ -979,9 +1000,18 @@
         function addEmoji(emoji, element) {
             const timelineItem = element.closest('.timeline-item-content');
             const commentInput = timelineItem.querySelector('.comment-input');
+            const emojiPicker = document.querySelector('.emoji-picker');
+            
+            // Ajouter l'emoji au texte
             commentInput.value += emoji;
+            
+            // Fermer le sélecteur d'emoji
+            if (emojiPicker) {
+                emojiPicker.remove();
+            }
+            
+            // Mettre à jour la prévisualisation
             updatePreview(commentInput);
-            element.closest('.emoji-picker').remove();
         }
 
         // Fonctions pour la réorganisation dans la timeline
