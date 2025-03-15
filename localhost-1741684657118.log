@@ -1,5 +1,0 @@
-admin-photos-cuisine.html:241 Uncaught (in promise) ReferenceError: showStatus is not defined
-    at handleFiles (admin-photos-cuisine.html:241:21)
-handleFiles @ admin-photos-cuisine.html:241
-await in handleFiles
-(anonymous) @ admin-photos-cuisine.html:215

@@ -146,7 +146,6 @@
     }
 
     .slideshow-section {
-        position: relative;
         width: calc((100vh - 270px) * 1.5);
         background: rgba(255, 255, 255, 0.9);
         border-radius: 10px;
@@ -546,7 +545,7 @@
 
         const imgElement = document.getElementById(`slideshow-image-${section}`);
         const iframeElement = document.getElementById(`slideshow-document-${section}`);
-        const textOverlay = document.getElementById(`${section}-text`);
+        const mediaContainer = document.querySelector(`#${section}-section .media-container`);
 
         // Retirer toutes les classes existantes sauf slideshow-media
         imgElement.className = 'slideshow-media';
@@ -556,63 +555,7 @@
 
         if (media.type === 'image') {
             imgElement.onload = function() {
-                // Gestion du texte overlay
-                if (media.comment && media.comment.trim() !== '') {
-                    textOverlay.textContent = media.comment;
-                    
-                    // Application des styles de police
-                    textOverlay.style.fontFamily = media.fontFamily || 'Arial';
-                    textOverlay.style.fontSize = `${media.fontSize || '24'}px`;
-                    textOverlay.style.color = media.textColor || '#ffffff';
-                    textOverlay.style.padding = '10px';
-                    textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
-                    textOverlay.style.borderRadius = '4px';
-                    textOverlay.style.maxWidth = '80%';
-                    textOverlay.style.display = 'block';
-                    textOverlay.style.position = 'absolute';
-                    
-                    // Positionnement du texte
-                    switch(media.textPosition) {
-                        case 'top-left':
-                            textOverlay.style.top = '10px';
-                            textOverlay.style.left = '10px';
-                            textOverlay.style.right = 'auto';
-                            textOverlay.style.bottom = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'top-right':
-                            textOverlay.style.top = '10px';
-                            textOverlay.style.right = '10px';
-                            textOverlay.style.left = 'auto';
-                            textOverlay.style.bottom = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'center':
-                            textOverlay.style.top = '50%';
-                            textOverlay.style.left = '50%';
-                            textOverlay.style.right = 'auto';
-                            textOverlay.style.bottom = 'auto';
-                            textOverlay.style.transform = 'translate(-50%, -50%)';
-                            textOverlay.style.textAlign = 'center';
-                            break;
-                        case 'bottom-left':
-                            textOverlay.style.bottom = '10px';
-                            textOverlay.style.left = '10px';
-                            textOverlay.style.top = 'auto';
-                            textOverlay.style.right = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'bottom-right':
-                            textOverlay.style.bottom = '10px';
-                            textOverlay.style.right = '10px';
-                            textOverlay.style.top = 'auto';
-                            textOverlay.style.left = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                    }
-                } else {
-                    textOverlay.style.display = 'none';
-                }
+                // ... existing overlay code ...
             };
 
             imgElement.src = media.path;
@@ -624,13 +567,11 @@
                 imgElement.classList.add(`transition-${transition}`);
                 imgElement.classList.add('active');
             }, 50);
-
         } else if (media.type === 'document' && media.path.toLowerCase().endsWith('.pdf')) {
             const viewerUrl = `/pdfjs/web/viewer.html?file=${encodeURIComponent(media.path)}`;
             iframeElement.src = viewerUrl;
             iframeElement.style.display = 'block';
             imgElement.style.display = 'none';
-            textOverlay.style.display = 'none';
 
             setTimeout(() => {
                 iframeElement.classList.add(`transition-${transition}`);

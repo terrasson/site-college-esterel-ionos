@@ -1,0 +1,26 @@
+admin-diaporama.html:698 Initialisation de la page...
+admin-diaporama.html:480 Chargement de la configuration existante...
+admin-diaporama.html:488 Configuration chargée: Object
+admin-diaporama.html:505 Timeline data mise à jour: Object
+admin-diaporama.html:590 Mise à jour de l'affichage pour la section: cuisine Object
+admin-diaporama.html:909 Ajout du média à la timeline: Object
+admin-diaporama.html:909 Ajout du média à la timeline: Object
+admin-diaporama.html:909 Ajout du média à la timeline: Object
+admin-diaporama.html:909 Ajout du média à la timeline: Object
+admin-diaporama.html:605 Chargement des médias pour la section: cuisine
+admin-diaporama.html:613 Photos chargées: Array(4)
+admin-diaporama.html:636 Documents chargés: Array(0)
+admin-diaporama.html:574 Erreur lors de la sauvegarde: TypeError: Cannot read properties of null (reading 'value')
+    at admin-diaporama.html:859:70
+    at Array.map (<anonymous>)
+    at updateTimelineData (admin-diaporama.html:850:76)
+    at saveTimeline (admin-diaporama.html:526:17)
+    at HTMLButtonElement.onclick (admin-diaporama.html:1033:14)
+saveTimeline @ admin-diaporama.html:574
+admin-diaporama.html:574 Erreur lors de la sauvegarde: TypeError: Cannot read properties of null (reading 'value')
+    at admin-diaporama.html:859:70
+    at Array.map (<anonymous>)
+    at updateTimelineData (admin-diaporama.html:850:76)
+    at saveTimeline (admin-diaporama.html:526:17)
+    at HTMLButtonElement.onclick (admin-diaporama.html:1033:14)
+saveTimeline @ admin-diaporama.html:574

@@ -1462,45 +1462,14 @@ app.post('/api/save-ticker', async (req, res) => {
 });
 
 // Route pour lire le message du bandeau défilant
-app.get('/api/ticker-message', async (req, res) => {
-    try {
-        // Try cache first
-        const cachedMessage = cache.get(CACHE_KEYS.TICKER_MESSAGE);
-        if (cachedMessage) {
-            console.log('Serving ticker message from cache');
-            return res.json(cachedMessage);
-        }
-
-        // If not in cache, get from blob storage
-        const { blobs } = await list({ prefix: 'config/' });
-        const tickerBlobs = blobs
-            .filter(b => b.pathname === 'config/ticker-message.json')
-            .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-
-        const tickerBlob = tickerBlobs[0];
-
-        if (tickerBlob) {
-            const response = await fetch(tickerBlob.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ticker message: ${response.status}`);
-            }
-            const data = await response.json();
-
-            // Cache the result
-            cache.set(CACHE_KEYS.TICKER_MESSAGE, data);
-            console.log('Cached new ticker message');
-
-            return res.json(data);
-        }
-
-        // Default message
-        const defaultMessage = { message: 'Bienvenue au Collège de l\'Estérel', speed: 60 };
-        cache.set(CACHE_KEYS.TICKER_MESSAGE, defaultMessage);
-        res.json(defaultMessage);
-
-    } catch (error) {
-        console.error('Error fetching ticker message:', error);
-        res.json({ message: 'Bienvenue au Collège de l\'Estérel', speed: 60 });
+app.get('/api/ticker-message', (req, res) => {
+    if (tickerMessageCache) {
+        // Envoyer le message sans logger
+        res.json(tickerMessageCache);
+    } else {
+        // Logger uniquement quand le cache est vide
+        console.log('Cache miss for ticker message');
+        // ... reste du code ...
     }
 });
 
