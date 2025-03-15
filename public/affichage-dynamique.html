@@ -146,6 +146,7 @@
     }
 
     .slideshow-section {
+        position: relative;
         width: calc((100vh - 270px) * 1.5);
         background: rgba(255, 255, 255, 0.9);
         border-radius: 10px;
@@ -170,7 +171,7 @@
         height: 100% !important;
         object-fit: contain;
         opacity: 0;
-        transition: all 1.5s ease-in-out;
+        transition: none; /* Réinitialiser la transition par défaut */
     }
 
     iframe.slideshow-media {
@@ -545,25 +546,19 @@
 
         const imgElement = document.getElementById(`slideshow-image-${section}`);
         const iframeElement = document.getElementById(`slideshow-document-${section}`);
-        const mediaContainer = document.querySelector(`#${section}-section .media-container`);
+        const textOverlay = document.getElementById(`${section}-text`);
 
-        // Assurons-nous que le conteneur de média est en position relative
-        mediaContainer.style.position = 'relative';
+        // Retirer toutes les classes existantes sauf slideshow-media
+        imgElement.className = 'slideshow-media';
+        iframeElement.className = 'slideshow-media';
+
+        const transition = media.transition || 'fade';
 
         if (media.type === 'image') {
             imgElement.onload = function() {
-                // Créer ou obtenir l'élément de texte
-                let textOverlay = mediaContainer.querySelector('.text-overlay');
-                if (!textOverlay) {
-                    textOverlay = document.createElement('div');
-                    textOverlay.className = 'text-overlay';
-                    mediaContainer.appendChild(textOverlay);
-                }
-
-                // Configurer le style du texte
+                // Gestion du texte overlay
                 if (media.comment && media.comment.trim() !== '') {
                     textOverlay.textContent = media.comment;
-                    textOverlay.style.position = 'absolute';
                     textOverlay.style.fontFamily = media.fontFamily || 'Arial';
                     textOverlay.style.fontSize = `${media.fontSize || '24'}px`;
                     textOverlay.style.color = media.textColor || '#ffffff';
@@ -571,20 +566,21 @@
                     textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
                     textOverlay.style.borderRadius = '4px';
                     textOverlay.style.maxWidth = '80%';
-                    textOverlay.style.zIndex = '10';
+                    textOverlay.style.display = 'block';
+                    textOverlay.style.position = 'absolute';
 
-                    // Positionner le texte sur l'image
+                    // Positionnement du texte
                     switch(media.textPosition) {
                         case 'top-left':
-                            textOverlay.style.top = '20px';
-                            textOverlay.style.left = '20px';
+                            textOverlay.style.top = '10px';
+                            textOverlay.style.left = '10px';
                             textOverlay.style.right = 'auto';
                             textOverlay.style.bottom = 'auto';
                             textOverlay.style.transform = 'none';
                             break;
                         case 'top-right':
-                            textOverlay.style.top = '20px';
-                            textOverlay.style.right = '20px';
+                            textOverlay.style.top = '10px';
+                            textOverlay.style.right = '10px';
                             textOverlay.style.left = 'auto';
                             textOverlay.style.bottom = 'auto';
                             textOverlay.style.transform = 'none';
@@ -598,21 +594,20 @@
                             textOverlay.style.textAlign = 'center';
                             break;
                         case 'bottom-left':
-                            textOverlay.style.bottom = '20px';
-                            textOverlay.style.left = '20px';
+                            textOverlay.style.bottom = '10px';
+                            textOverlay.style.left = '10px';
                             textOverlay.style.top = 'auto';
                             textOverlay.style.right = 'auto';
                             textOverlay.style.transform = 'none';
                             break;
                         case 'bottom-right':
-                            textOverlay.style.bottom = '20px';
-                            textOverlay.style.right = '20px';
+                            textOverlay.style.bottom = '10px';
+                            textOverlay.style.right = '10px';
                             textOverlay.style.top = 'auto';
                             textOverlay.style.left = 'auto';
                             textOverlay.style.transform = 'none';
                             break;
                     }
-                    textOverlay.style.display = 'block';
                 } else {
                     textOverlay.style.display = 'none';
                 }
@@ -621,54 +616,40 @@
             imgElement.src = media.path;
             imgElement.style.display = 'block';
             iframeElement.style.display = 'none';
-        }
 
-        const transition = media.transition || 'fade';
-        
-        if (media.type === 'document' && media.path.toLowerCase().endsWith('.pdf')) {
-            // Gestion des PDFs
-            iframeElement.classList.add(`transition-${transition}`);
+            // Ajouter la nouvelle transition après un court délai
+            setTimeout(() => {
+                imgElement.classList.add(`transition-${transition}`);
+                imgElement.classList.add('active');
+            }, 50);
+
+        } else if (media.type === 'document' && media.path.toLowerCase().endsWith('.pdf')) {
             const viewerUrl = `/pdfjs/web/viewer.html?file=${encodeURIComponent(media.path)}`;
             iframeElement.src = viewerUrl;
             iframeElement.style.display = 'block';
             imgElement.style.display = 'none';
-            
+            textOverlay.style.display = 'none';
+
             setTimeout(() => {
+                iframeElement.classList.add(`transition-${transition}`);
                 iframeElement.classList.add('active');
-                iframeElement.style.opacity = '1';
-            }, 50);
-        } else {
-            // Gestion des images
-            imgElement.classList.add(`transition-${transition}`);
-            imgElement.src = media.path;
-            imgElement.style.display = 'block';
-            iframeElement.style.display = 'none';
-            
-            setTimeout(() => {
-                imgElement.classList.add('active');
-                imgElement.style.opacity = '1';
             }, 50);
         }
 
         const duration = Math.max(5, media.duration || 5) * 1000;
-        console.log(`Durée configurée: ${duration/1000} secondes`);
         
-        const timeout = setTimeout(() => {
-            if (section === 'cuisine') {
-                cuisineIndex = (cuisineIndex + 1) % cuisineConfig.medias.length;
-                console.log(`Changement vers la photo suivante - Index: ${cuisineIndex}`);
-                showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
-            } else {
-                directionIndex = (directionIndex + 1) % directionConfig.medias.length;
-                console.log(`Changement vers la photo suivante - Index: ${directionIndex}`);
-                showMedia('direction', directionConfig.medias[directionIndex]);
-            }
-        }, duration);
-
         if (section === 'cuisine') {
-            cuisineTimeout = timeout;
+            if (cuisineTimeout) clearTimeout(cuisineTimeout);
+            cuisineTimeout = setTimeout(() => {
+                cuisineIndex = (cuisineIndex + 1) % cuisineConfig.medias.length;
+                showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
+            }, duration);
         } else {
-            directionTimeout = timeout;
+            if (directionTimeout) clearTimeout(directionTimeout);
+            directionTimeout = setTimeout(() => {
+                directionIndex = (directionIndex + 1) % directionConfig.medias.length;
+                showMedia('direction', directionConfig.medias[directionIndex]);
+            }, duration);
         }
     }
 
