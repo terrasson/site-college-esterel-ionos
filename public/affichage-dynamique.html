@@ -75,24 +75,24 @@
     }
 
     .ticker-content {
-      white-space: nowrap;
       position: relative;
       width: 100%;
+      overflow: hidden;
     }
 
     #ticker-text {
       display: inline-block;
       white-space: nowrap;
-      padding-left: 100%;  /* Commence hors écran à droite */
-      animation: ticker var(--duration) linear infinite;
+      padding-left: 100%;
+      transform: translateX(0);
     }
 
     @keyframes ticker {
-      0% {
-        transform: translateX(0);  /* Commence à la position initiale (droite) */
+      from {
+        transform: translateX(100%);
       }
-      100% {
-        transform: translateX(-200%);  /* Va au-delà de la gauche */
+      to {
+        transform: translateX(-100%);
       }
     }
 
@@ -391,9 +391,7 @@
   </main>
 
   <div class="ticker">
-    <div class="ticker-content">
-        <span id="ticker-text"></span>
-    </div>
+    <div id="ticker-text"></div>
   </div>
 
   <script>
@@ -462,27 +460,36 @@
     getWeather();
     setInterval(getWeather, 30 * 60 * 1000);
 
-    // Fonction pour initialiser le bandeau
+    // Remplacer les fonctions de gestion du bandeau défilant
+    let lastTickerMessage = ''; // Variable pour stocker le dernier message
+
     async function initNewsTicker() {
         try {
+            console.log('Tentative de récupération du message...');
             const response = await fetch('/api/ticker-message');
+            if (!response.ok) {
+                console.log('Réponse non OK:', response.status);
+                return;
+            }
+
             const data = await response.json();
+            console.log('Message reçu:', data);
             
             const tickerElement = document.getElementById('ticker-text');
             if (tickerElement && data.message) {
                 tickerElement.textContent = data.message;
-                tickerElement.style.setProperty('--duration', `${data.speed}s`);
+                const duration = data.speed || 30;
+                tickerElement.style.animation = `ticker ${duration}s linear infinite`;
             }
         } catch (error) {
-            console.error("Erreur:", error);
+            console.log('Erreur détaillée:', error);
         }
     }
 
-    // Initialiser au chargement
-    document.addEventListener('DOMContentLoaded', initNewsTicker);
-
-    // Mettre à jour régulièrement
-    setInterval(initNewsTicker, 1000);
+    document.addEventListener('DOMContentLoaded', () => {
+        initNewsTicker();
+        setInterval(initNewsTicker, 5000);
+    });
 
     // Initialisation des variables globales
     let cuisineConfig = { medias: [] };
@@ -559,9 +566,13 @@
                 // Gestion du texte overlay
                 if (media.comment && media.comment.trim() !== '') {
                     textOverlay.textContent = media.comment;
+                    
+                    // Application complète des styles
                     textOverlay.style.fontFamily = media.fontFamily || 'Arial';
-                    textOverlay.style.fontSize = `${media.fontSize || '24'}px`;
+                    textOverlay.style.fontSize = `${media.fontSize || 24}px`;
                     textOverlay.style.color = media.textColor || '#ffffff';
+                    textOverlay.style.fontWeight = media.fontWeight || 'normal';
+                    textOverlay.style.fontStyle = media.fontStyle || 'normal';
                     textOverlay.style.padding = '10px';
                     textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
                     textOverlay.style.borderRadius = '4px';
@@ -629,7 +640,7 @@
             iframeElement.style.display = 'block';
             imgElement.style.display = 'none';
             textOverlay.style.display = 'none';
-
+            
             setTimeout(() => {
                 iframeElement.classList.add(`transition-${transition}`);
                 iframeElement.classList.add('active');
@@ -638,18 +649,18 @@
 
         const duration = Math.max(5, media.duration || 5) * 1000;
         
-        if (section === 'cuisine') {
+            if (section === 'cuisine') {
             if (cuisineTimeout) clearTimeout(cuisineTimeout);
             cuisineTimeout = setTimeout(() => {
                 cuisineIndex = (cuisineIndex + 1) % cuisineConfig.medias.length;
                 showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
             }, duration);
-        } else {
+            } else {
             if (directionTimeout) clearTimeout(directionTimeout);
             directionTimeout = setTimeout(() => {
                 directionIndex = (directionIndex + 1) % directionConfig.medias.length;
                 showMedia('direction', directionConfig.medias[directionIndex]);
-            }, duration);
+        }, duration);
         }
     }
 
@@ -660,61 +671,6 @@
         // Recharger les configurations toutes les 30 secondes
         setInterval(loadConfigurations, 30000);
     });
-
-    // Ajoutez cette fonction pour gérer le bandeau défilant
-    async function updateTickerMessage() {
-        try {
-            const response = await fetch('/api/ticker-message');
-            if (!response.ok) {
-                throw new Error('Erreur lors de la récupération du message');
-            }
-            const data = await response.json();
-            
-            const tickerElement = document.getElementById('ticker-text');
-            if (tickerElement && data.message) {
-                tickerElement.textContent = data.message;
-            }
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour du bandeau:', error);
-        }
-    }
-
-    // Mettre à jour le message toutes les 30 secondes
-    setInterval(updateTickerMessage, 30000);
-
-    // Charger le message initial
-    document.addEventListener('DOMContentLoaded', updateTickerMessage);
-
-    let currentIndex = 0; // Index de l'image actuelle
-    let cuisineMedias = []; // Tableau pour stocker les médias
-
-    async function initSlideshowCuisine() {
-        // Supposons que vous avez déjà rempli cuisineMedias avec les chemins des images
-        console.log('Médias cuisine combinés:', cuisineMedias);
-        if (cuisineMedias.length > 0) {
-            showNextMediaCuisine();
-        }
-    }
-
-    function showNextMediaCuisine() {
-        console.log('showNextMediaCuisine appelée, index actuel:', currentIndex);
-
-        if (currentIndex < cuisineMedias.length) {
-            const media = cuisineMedias[currentIndex];
-            console.log('Affichage du média:', media);
-
-            // Assurez-vous que l'élément img existe
-            const imgElement = document.getElementById('media-display');
-            imgElement.src = media.path; // Chemin de l'image
-            imgElement.alt = media.name; // Nom de l'image
-
-            currentIndex++;
-            setTimeout(showNextMediaCuisine, media.duration * 1000); // Appel après la durée du média
-        } else {
-            console.log('Fin des médias cuisine');
-            currentIndex = 0; // Réinitialiser l'index si nécessaire
-        }
-    }
 
     document.addEventListener('DOMContentLoaded', () => {
         // Stocker la page actuelle dans l'historique
