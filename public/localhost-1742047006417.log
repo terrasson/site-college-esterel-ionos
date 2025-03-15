@@ -1,0 +1,4 @@
+admin-bandeau-defilant.html:647 Erreur: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+loadCurrentSpeed @ admin-bandeau-defilant.html:647
+admin-bandeau-defilant.html:675 Erreur: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+loadCurrentMessage @ admin-bandeau-defilant.html:675

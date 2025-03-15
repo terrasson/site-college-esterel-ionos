@@ -955,14 +955,39 @@
                     <div class="comment-controls">
                         <input type="text" class="comment-input" placeholder="Ajouter un commentaire" 
                             value="${media.comment || ''}" title="Commentaire">
-                        <select class="position-select" title="Position du texte">
-                            <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
-                            <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
-                            <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
-                            <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
-                            <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
-                        </select>
-                        <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
+                        <div class="text-controls">
+                            <select class="font-select" title="Police">
+                                <option value="Arial" ${media.fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
+                                <option value="Times New Roman" ${media.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                <option value="Helvetica" ${media.fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                <option value="Georgia" ${media.fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                <option value="Verdana" ${media.fontFamily === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                            </select>
+                            <select class="font-weight-select" title="Graisse">
+                                <option value="normal" ${media.fontWeight === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="bold" ${media.fontWeight === 'bold' ? 'selected' : ''}>Gras</option>
+                                <option value="lighter" ${media.fontWeight === 'lighter' ? 'selected' : ''}>Fin</option>
+                            </select>
+                            <select class="font-style-select" title="Style">
+                                <option value="normal" ${media.fontStyle === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="italic" ${media.fontStyle === 'italic' ? 'selected' : ''}>Italique</option>
+                            </select>
+                            <input type="number" class="font-size-input" 
+                                value="${media.fontSize || '24'}" 
+                                min="16" max="72" 
+                                title="Taille">
+                            <input type="color" class="color-picker" 
+                                value="${media.textColor || '#ffffff'}" 
+                                title="Couleur">
+                            <select class="position-select" title="Position">
+                                <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
+                                <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
+                                <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
+                                <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
+                                <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
+                            </select>
+                            <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
+                        </div>
                     </div>
                 </div>
             `;

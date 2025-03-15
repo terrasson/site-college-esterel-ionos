@@ -485,10 +485,6 @@
       
       if (success) {
         showStatus("Message sauvegardé avec succès !", true);
-        setTimeout(() => {
-          messageForm.reset();
-          updatePreview();
-        }, 2000);
       } else {
         showStatus("Erreur lors de la sauvegarde du message.", false);
       }
@@ -641,79 +637,73 @@
     async function loadCurrentSpeed() {
       try {
         const response = await fetch('/api/ticker-message');
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.log('Réponse non-JSON reçue');
+          return;
+        }
+
         const data = await response.json();
-        if (data.speed) {
+        if (data && data.speed) {
           scrollSpeed.value = data.speed;
           speedValue.textContent = `${data.speed} secondes`;
           updatePreview();
         }
       } catch (error) {
-        console.error('Erreur:', error);
+        console.log('Erreur détaillée:', error);
       }
     }
 
     // Appeler au chargement de la page
     document.addEventListener('DOMContentLoaded', loadCurrentSpeed);
 
-    // Ajouter une fonction pour charger le message actuel
+    // Modifier la fonction loadCurrentMessage
     async function loadCurrentMessage() {
         try {
             const response = await fetch('/api/ticker-message');
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+
             const data = await response.json();
             
-            if (data.message) {
+            if (data && data.message) {
                 // Afficher le message dans le textarea
-                tickerMessage.value = data.message;
+                document.getElementById('tickerMessage').value = data.message;
                 
                 // Mettre à jour l'aperçu
-                previewText.textContent = data.message;
+                document.getElementById('previewText').textContent = data.message;
                 
-                // Mettre à jour le curseur de vitesse
-                scrollSpeed.value = data.speed;
-                speedValue.textContent = `${data.speed} secondes`;
-                
-                // Mettre à jour l'animation de l'aperçu
-                previewText.style.animation = `preview-ticker ${data.speed}s linear infinite`;
+                // Mettre à jour le curseur de vitesse si disponible
+                if (data.speed) {
+                    document.getElementById('scrollSpeed').value = data.speed;
+                    document.getElementById('speedValue').textContent = `${data.speed} secondes`;
+                    
+                    // Mettre à jour l'animation de l'aperçu
+                    document.getElementById('previewText').style.animation = `preview-ticker ${data.speed}s linear infinite`;
+                }
             }
         } catch (error) {
-            console.error('Erreur:', error);
+            console.log('Erreur détaillée:', error);
         }
     }
 
-    // Charger le message au chargement de la page
-    document.addEventListener('DOMContentLoaded', loadCurrentMessage);
-
-    // Gestion du curseur de vitesse pour l'aperçu
-    scrollSpeed.addEventListener("input", () => {
-        const speed = scrollSpeed.value;
-        speedValue.textContent = `${speed} secondes`;
-        
-        // Mise à jour de l'aperçu local
-        previewText.style.animation = `preview-ticker ${speed}s linear infinite`;
+    // Appeler loadCurrentMessage au chargement de la page
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCurrentMessage();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Stocker la page actuelle dans l'historique
-        const currentPage = window.location.pathname;
-        if (!sessionStorage.getItem('lastPage')) {
-            sessionStorage.setItem('lastPage', document.referrer || '/');
+        const backButton = document.getElementById('backButton');
+        if (backButton) {
+            backButton.addEventListener('click', () => {
+                window.history.back(); // Utilise l'historique du navigateur pour revenir à la page précédente
+            });
         }
-
-        // Gérer le clic sur le bouton retour
-        document.getElementById('backButton').addEventListener('click', () => {
-            const lastPage = sessionStorage.getItem('lastPage');
-            if (lastPage && lastPage !== '') {
-                window.location.href = lastPage;
-            } else {
-                window.location.href = '/'; // Page par défaut si pas d'historique
-            }
-            sessionStorage.removeItem('lastPage'); // Nettoyer après utilisation
-        });
-
-        // Stocker la page actuelle pour le prochain retour
-        window.addEventListener('beforeunload', () => {
-            sessionStorage.setItem('lastPage', currentPage);
-        });
     });
   </script>
 </body>

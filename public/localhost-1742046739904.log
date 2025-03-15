@@ -1,0 +1,8 @@
+affichage-dynamique.html:672 Initialisation du diaporama...
+affichage-dynamique.html:508 Vérification des configurations...
+affichage-dynamique.html:487 Erreur: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+initNewsTicker @ affichage-dynamique.html:487
+affichage-dynamique.html:519 Nouvelle configuration détectée
+affichage-dynamique.html:692 Erreur lors de la mise à jour du bandeau: Error: Erreur lors de la récupération du message
+    at HTMLDocument.updateTickerMessage (affichage-dynamique.html:683:23)
+updateTickerMessage @ affichage-dynamique.html:692

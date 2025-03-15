@@ -1464,14 +1464,7 @@ app.post('/api/save-ticker', async (req, res) => {
 // Route pour lire le message du bandeau défilant
 app.get('/api/ticker-message', async (req, res) => {
     try {
-        // Try cache first
-        const cachedMessage = cache.get(CACHE_KEYS.TICKER_MESSAGE);
-        if (cachedMessage) {
-            console.log('Serving ticker message from cache');
-            return res.json(cachedMessage);
-        }
-
-        // If not in cache, get from blob storage
+        // Récupérer le message depuis Vercel Blob Storage
         const { blobs } = await list({ prefix: 'config/' });
         const tickerBlobs = blobs
             .filter(b => b.pathname === 'config/ticker-message.json')
@@ -1481,26 +1474,20 @@ app.get('/api/ticker-message', async (req, res) => {
 
         if (tickerBlob) {
             const response = await fetch(tickerBlob.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ticker message: ${response.status}`);
+            if (response.ok) {
+                const data = await response.json();
+                return res.json(data);
             }
-            const data = await response.json();
-
-            // Cache the result
-            cache.set(CACHE_KEYS.TICKER_MESSAGE, data);
-            console.log('Cached new ticker message');
-
-            return res.json(data);
         }
 
-        // Default message
-        const defaultMessage = { message: 'Bienvenue au Collège de l\'Estérel', speed: 60 };
-        cache.set(CACHE_KEYS.TICKER_MESSAGE, defaultMessage);
-        res.json(defaultMessage);
-
+        // Message par défaut si aucun message n'est trouvé
+        res.json({
+            message: 'Bienvenue au Collège de l\'Estérel',
+            speed: 30
+        });
     } catch (error) {
-        console.error('Error fetching ticker message:', error);
-        res.json({ message: 'Bienvenue au Collège de l\'Estérel', speed: 60 });
+        console.error('Erreur lors de la lecture du message:', error);
+        res.status(500).json({ error: 'Erreur lors de la lecture du message' });
     }
 });
 

@@ -142,4 +142,39 @@ Développement d'une application d'affichage dynamique pour écrans d'informatio
 - Amélioration de la prévisualisation
 - Ajout d'outils de dessin supplémentaires
 
+## 15 Mars 2024
+
+### Sujet principal
+- Implémentation d'une icône d'information et correction du bandeau défilant
+- Amélioration de la navigation entre les pages
+
+### Points discutés
+- Affichage et animation du bandeau défilant
+- Intégration d'une icône d'information (ⓘ) dans la bannière
+- Positionnement des logos institutionnels
+- Gestion du bouton retour
+
+### Solutions apportées
+- Ajout de logs de débogage pour le bandeau défilant
+- Intégration de l'icône ⓘ avec lien vers contact.html
+- Modification du système de navigation avec window.history.back()
+- Tentatives d'optimisation du positionnement des éléments de la bannière
+
+### Fonctionnalités réalisées
+- Amélioration du système de bandeau défilant
+- Ajout d'un accès rapide à la page contact via l'icône ⓘ
+- Système de navigation cohérent entre les pages
+- Système de logs pour le suivi des messages
+
+### Améliorations notables
+- Meilleure traçabilité des problèmes du bandeau défilant
+- Accès plus intuitif aux informations de contact
+- Navigation plus fluide entre les pages
+- Interface enrichie avec l'icône d'information
+
+#### Points à finaliser
+- Ajustement du positionnement des logos
+- Placement définitif de l'icône d'information
+- Harmonisation complète de la bannière
+
 --- 
