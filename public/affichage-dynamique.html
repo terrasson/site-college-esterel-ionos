@@ -378,6 +378,111 @@
             padding-right: 10px;
         }
     }
+
+    /* Ajout des styles pour le mode portrait */
+    @media (orientation: portrait) {
+        .slideshow-container {
+            flex-direction: column;
+            height: calc(100vh - 200px); /* Réduire la hauteur totale */
+            gap: 15px; /* Réduire l'espace entre les sections */
+            margin: 10px;
+            width: calc(100% - 20px);
+        }
+
+        .slideshow-section {
+            width: 100% !important; /* Forcer la largeur complète */
+            height: calc((100vh - 250px) / 2) !important; /* Diviser l'espace en deux */
+            padding: 10px;
+            margin: 0;
+        }
+
+        .media-container {
+            height: 100% !important;
+        }
+
+        /* Ajuster la bannière en mode portrait */
+        .header-banner {
+            padding: 5px 0;
+        }
+
+        .banner-left {
+            padding: 5px;
+        }
+
+        .banner-title {
+            font-size: 1.2em;
+        }
+
+        .banner-date, .banner-time {
+            font-size: 0.9em;
+        }
+
+        /* Ajuster la météo */
+        .weather-container {
+            transform: scale(0.9);
+        }
+
+        /* Ajuster le bandeau défilant */
+        .ticker {
+            height: 30px;
+            padding: 5px 0;
+        }
+
+        /* Optimiser l'espace pour les logos */
+        .logo img {
+            max-height: 40px;
+        }
+
+        .banner-right {
+            gap: 10px;
+            padding-right: 10px;
+        }
+    }
+
+    /* Assurer que rien ne dépasse en mode portrait sur les petits écrans */
+    @media (orientation: portrait) and (max-height: 800px) {
+        .slideshow-container {
+            height: calc(100vh - 180px);
+        }
+
+        .slideshow-section {
+            height: calc((100vh - 220px) / 2) !important;
+        }
+
+        .header-banner {
+            padding: 2px 0;
+        }
+
+        .logo img {
+            max-height: 35px;
+        }
+    }
+
+    /* Optimisation pour les très grands écrans en portrait */
+    @media (orientation: portrait) and (min-height: 1920px) {
+        .slideshow-container {
+            height: calc(100vh - 300px);
+        }
+
+        .slideshow-section {
+            height: calc((100vh - 350px) / 2) !important;
+        }
+    }
+
+    /* S'assurer que le contenu reste visible sur les écrans étroits */
+    @media (orientation: portrait) and (max-width: 500px) {
+        .banner-title {
+            font-size: 1em;
+        }
+
+        .weather-container {
+            transform: scale(0.8);
+        }
+
+        .logo img {
+            max-height: 30px;
+        }
+    }
   </style>
 </head>
 
