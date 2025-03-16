@@ -300,14 +300,15 @@
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        gap: 20px;
-        padding-right: 20px;
+        gap: 25px;
+        padding-right: 25px;
     }
 
     .logo img {
-        max-height: 60px;
+        max-height: 75px;
         width: auto;
         object-fit: contain;
+        transition: all 0.3s ease;
     }
 
     .info-link {
@@ -326,6 +327,56 @@
     /* Ajuster la position relative pour le conteneur */
     .banner-container {
         position: relative;
+    }
+
+    /* Ajustements responsifs */
+    @media (max-width: 1400px) {
+        .logo img {
+            max-height: 70px;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .logo img {
+            max-height: 65px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .logo img {
+            max-height: 60px;
+        }
+        .banner-right {
+            gap: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .logo img {
+            max-height: 50px;
+        }
+        .banner-right {
+            gap: 15px;
+            padding-right: 15px;
+        }
+    }
+
+    /* Pour les écrans en mode portrait */
+    @media (orientation: portrait) {
+        .logo img {
+            max-height: 55px;
+        }
+    }
+
+    /* Pour les très petits écrans */
+    @media (max-width: 480px) {
+        .logo img {
+            max-height: 45px;
+        }
+        .banner-right {
+            gap: 10px;
+            padding-right: 10px;
+        }
     }
   </style>
 </head>
