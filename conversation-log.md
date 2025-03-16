@@ -177,4 +177,41 @@ Développement d'une application d'affichage dynamique pour écrans d'informatio
 - Placement définitif de l'icône d'information
 - Harmonisation complète de la bannière
 
+
+## 16 Mars 2025
+
+### Sujet principal
+- Optimisation de l'affichage en mode portrait
+- Amélioration du sélecteur d'emojis dans l'interface d'administration
+
+### Points discutés
+- Adaptation responsive pour l'écran en mode portrait (1080x1920)
+- Réorganisation des diaporamas en mode portrait
+- Enrichissement du sélecteur d'emojis
+- Amélioration de l'expérience utilisateur pour la sélection d'emojis
+
+### Solutions apportées
+- Implémentation d'un système de redimensionnement automatique pour le mode portrait
+- Réorganisation des diaporamas en vertical (un au-dessus de l'autre)
+- Optimisation des espaces et marges pour éviter le défilement
+- Ajout d'une plus grande variété d'emojis dans le sélecteur
+- Amélioration de l'interface du sélecteur d'emojis avec fermeture automatique
+
+### Fonctionnalités réalisées
+- Adaptation automatique de l'affichage en mode portrait
+- Redimensionnement intelligent des éléments de la page
+- Interface enrichie pour la sélection d'emojis
+- Meilleure gestion de l'espace en mode portrait
+
+### Améliorations notables
+- Suppression du besoin de défilement en mode portrait
+- Meilleure expérience utilisateur pour les écrans verticaux
+- Interface plus riche pour la sélection d'emojis
+- Optimisation de l'affichage pour différentes résolutions
+
+#### Points à tester
+- Vérification du comportement responsive sur différentes résolutions
+- Validation de l'affichage des diaporamas en mode portrait
+- Test de l'interface d'emojis améliorée
+
 --- 
