@@ -406,25 +406,55 @@
             z-index: 1000;
             background: white;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .emoji-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #ddd;
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+        }
+
+        .emoji-picker-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 0 5px;
+        }
+
+        .emoji-picker-close:hover {
+            color: #333;
+        }
+
+        .emoji-grid {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             gap: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            padding: 10px;
         }
 
-        .emoji-picker span {
+        .emoji-item {
             cursor: pointer;
             padding: 5px;
             text-align: center;
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.1s;
+            border-radius: 4px;
         }
 
-        .emoji-picker span:hover {
+        .emoji-item:hover {
             transform: scale(1.2);
-            background: #f0f0f0;
-            border-radius: 4px;
+            background-color: #f0f0f0;
         }
     </style>
 </head>
@@ -980,13 +1010,13 @@
                                 value="${media.textColor || '#ffffff'}" 
                                 title="Couleur">
                             <select class="position-select" title="Position">
-                                <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
-                                <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
-                                <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
-                                <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
-                                <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
-                            </select>
-                            <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
+                            <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
+                            <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
+                            <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
+                            <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
+                            <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
+                        </select>
+                        <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
                         </div>
                     </div>
                 </div>
@@ -1009,31 +1039,58 @@
 
             const picker = document.createElement('div');
             picker.className = 'emoji-picker';
-            const emojis = ['😊', '😂', '❤️', '👍', '🎉', '⭐', '🔥', '💪', '👏', '🌟', 
-                            '🎨', '🎭', '🎪', '🎟️', '🎫', '🎗️', '🎖️', '🏆', '📚', '✏️',
-                            '📖', '🎓', '🎒', '🏫', '🏢', '🏡', '🌺', '🌸', '🌼', '🌻',
-                            '🌞', '🌈', '☀️', '⭐', '✨', '💫'];
             
-            picker.innerHTML = emojis.map(emoji => 
-                `<span onclick="addEmoji('${emoji}', this)">${emoji}</span>`
-            ).join('');
+            // Liste étendue d'emojis avec plus de visages et d'expressions
+            const emojis = [
+                // Visages et expressions
+                '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', 
+                '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩',
+                '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢',
+                '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🫣',
+                // Gestes et mains
+                '👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇',
+                // Symboles et décorations
+                '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗',
+                '⭐', '✨', '💫', '🌟', '✅', '❌', '💯', '🎯', '🎨', '🎭', '🎪',
+                // Éducation et école
+                '📚', '📖', '📝', '✏️', '📏', '📐', '🎒', '🏫', '🎓', '👨‍🏫', '👩‍🏫'
+            ];
+            
+            // Ajouter un bouton de fermeture
+            picker.innerHTML = `
+                <div class="emoji-picker-header">
+                    <span>Choisir un emoji</span>
+                    <button class="emoji-picker-close" onclick="closeEmojiPicker()">×</button>
+                </div>
+                <div class="emoji-grid">
+                    ${emojis.map(emoji => 
+                        `<span class="emoji-item" onclick="addEmoji('${emoji}', this)">${emoji}</span>`
+                    ).join('')}
+                </div>
+            `;
 
             const controls = button.closest('.text-controls');
             controls.appendChild(picker);
         }
 
+        // Ajouter cette nouvelle fonction pour fermer le picker
+        function closeEmojiPicker() {
+            const picker = document.querySelector('.emoji-picker');
+            if (picker) {
+                picker.remove();
+            }
+        }
+
+        // Modifier la fonction addEmoji pour fermer automatiquement après sélection
         function addEmoji(emoji, element) {
             const timelineItem = element.closest('.timeline-item-content');
             const commentInput = timelineItem.querySelector('.comment-input');
-            const emojiPicker = document.querySelector('.emoji-picker');
             
             // Ajouter l'emoji au texte
             commentInput.value += emoji;
             
-            // Fermer le sélecteur d'emoji
-            if (emojiPicker) {
-                emojiPicker.remove();
-            }
+            // Fermer automatiquement le sélecteur d'emoji
+            closeEmojiPicker();
             
             // Mettre à jour la prévisualisation
             updatePreview(commentInput);
