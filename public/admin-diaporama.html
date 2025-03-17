@@ -735,6 +735,21 @@
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', async () => {
+            // Vérifier l'authentification
+            try {
+                const response = await fetch('/api/check-auth');
+                if (!response.ok) {
+                    // Si non authentifié, rediriger vers la page de connexion
+                    window.location.href = '/login.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Erreur de vérification d\'authentification:', error);
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Si authentifié, continuer avec l'initialisation normale de la page
             console.log('Initialisation de la page...');
             validateTimelineData();
             await loadExistingConfig();
