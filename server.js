@@ -235,18 +235,24 @@ app.post('/api/upload-cuisine-photo', upload.single('photo'), async (req, res) =
 // Route pour récupérer la liste des photos
 app.get('/api/cuisine-photos', async (req, res) => {
     try {
-        // List all blobs in the cuisine directory
-        const { blobs } = await list({ prefix: 'cuisine/' });
+        // Vérifier le cache d'abord
+        const cachedPhotos = cache.get(CACHE_KEYS.CUISINE_PHOTOS);
+        if (cachedPhotos) {
+            return res.json(cachedPhotos);
+        }
 
+        const { blobs } = await list({ prefix: 'cuisine/' });
         const images = blobs.map(blob => ({
             filename: blob.pathname.split('/').pop(),
             url: blob.url
         }));
 
+        // Mettre en cache pour 5 minutes
+        cache.set(CACHE_KEYS.CUISINE_PHOTOS, images, CACHE_DURATIONS.PHOTOS);
         res.json(images);
     } catch (error) {
-        console.error('Erreur lors de la lecture des photos:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des photos' });
+        console.error('Erreur:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
@@ -364,17 +370,24 @@ app.post('/api/upload-direction-photo', upload.single('photo'), async (req, res)
 // Route pour récupérer la liste des photos de direction
 app.get('/api/direction-photos', async (req, res) => {
     try {
-        const { blobs } = await list({ prefix: 'direction/' });
+        // Vérifier le cache d'abord
+        const cachedPhotos = cache.get(CACHE_KEYS.DIRECTION_PHOTOS);
+        if (cachedPhotos) {
+            return res.json(cachedPhotos);
+        }
 
-        const images = blobs.map(blob => ({
+        const { blobs } = await list({ prefix: 'direction/' });
+        const photos = blobs.map(blob => ({
             filename: blob.pathname.split('/').pop(),
             url: blob.url
         }));
 
-        res.json(images);
+        // Mettre en cache pour 5 minutes
+        cache.set(CACHE_KEYS.DIRECTION_PHOTOS, photos, CACHE_DURATIONS.PHOTOS);
+        res.json(photos);
     } catch (error) {
-        console.error('Erreur lors de la lecture des photos:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des photos' });
+        console.error('Erreur:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
@@ -382,19 +395,15 @@ app.get('/api/direction-photos', async (req, res) => {
 app.delete('/api/direction-photos/:filename', async (req, res) => {
     try {
         const filename = req.params.filename;
-
-        // Obtenir la liste des blobs existants
-        const { blobs } = await list();
-
-        // Trouver le blob exact à supprimer
+        const { blobs } = await list({ prefix: 'direction/' });
         const blobToDelete = blobs.find(blob => blob.pathname === `direction/${filename}`);
 
         if (!blobToDelete) {
             return res.status(404).json({ message: 'Photo non trouvée' });
         }
 
-        // Supprimer en utilisant l'URL complète
         await del(blobToDelete.url);
+        invalidateCache(CACHE_KEYS.DIRECTION_PHOTOS);
 
         res.json({ message: 'Photo supprimée avec succès' });
     } catch (error) {
@@ -709,8 +718,17 @@ const cache = new NodeCache({
 
 // Cache keys
 const CACHE_KEYS = {
-    DIAPORAMA_CONFIG: 'diaporama_config',
-    TICKER_MESSAGE: 'ticker_message',
+    DIRECTION_PHOTOS: 'direction_photos',
+    CUISINE_PHOTOS: 'cuisine_photos',
+    DIRECTION_DOCS: 'direction_docs',
+    CUISINE_DOCS: 'cuisine_docs',
+    DIAPORAMA_CONFIG: 'diaporama_config'
+};
+
+const CACHE_DURATIONS = {
+    PHOTOS: 300,  // 5 minutes
+    DOCS: 300,    // 5 minutes
+    CONFIG: 60    // 1 minute
 };
 
 // Route pour sauvegarder la configuration
