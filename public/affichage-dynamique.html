@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/responsive-page.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* ... autres styles existants ... */
 
@@ -743,18 +744,24 @@
                 if (media.comment && media.comment.trim() !== '') {
                     textOverlay.textContent = media.comment;
                     
-                    // Application complète des styles
+                    // Application des styles de base
                     textOverlay.style.fontFamily = media.fontFamily || 'Arial';
                     textOverlay.style.fontSize = `${media.fontSize || 24}px`;
                     textOverlay.style.color = media.textColor || '#ffffff';
                     textOverlay.style.fontWeight = media.fontWeight || 'normal';
                     textOverlay.style.fontStyle = media.fontStyle || 'normal';
                     textOverlay.style.padding = '10px';
-                    textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
                     textOverlay.style.borderRadius = '4px';
                     textOverlay.style.maxWidth = '80%';
                     textOverlay.style.display = 'block';
                     textOverlay.style.position = 'absolute';
+
+                    // Appliquer le fond semi-transparent uniquement si hasBackground est true
+                    if (media.hasBackground) {
+                        textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+                    } else {
+                        textOverlay.style.background = 'none';
+                    }
 
                     // Positionnement du texte
                     switch(media.textPosition) {
@@ -772,12 +779,20 @@
                             textOverlay.style.bottom = 'auto';
                             textOverlay.style.transform = 'none';
                             break;
+                        case 'top-center':
+                            textOverlay.style.top = '10px';
+                            textOverlay.style.left = '0';
+                            textOverlay.style.right = '0';
+                            textOverlay.style.width = '100%';
+                            textOverlay.style.transform = 'none';
+                            textOverlay.style.textAlign = 'center';
+                            break;
                         case 'center':
                             textOverlay.style.top = '50%';
-                            textOverlay.style.left = '50%';
-                            textOverlay.style.right = 'auto';
-                            textOverlay.style.bottom = 'auto';
-                            textOverlay.style.transform = 'translate(-50%, -50%)';
+                            textOverlay.style.left = '0';
+                            textOverlay.style.right = '0';
+                            textOverlay.style.width = '100%';
+                            textOverlay.style.transform = 'translateY(-50%)';
                             textOverlay.style.textAlign = 'center';
                             break;
                         case 'bottom-left':
@@ -792,6 +807,15 @@
                             textOverlay.style.right = '10px';
                             textOverlay.style.top = 'auto';
                             textOverlay.style.left = 'auto';
+                            textOverlay.style.transform = 'none';
+                            break;
+                        case 'bottom-center':
+                            textOverlay.style.bottom = '10px';
+                            textOverlay.style.left = '0';
+                            textOverlay.style.right = '0';
+                            textOverlay.style.width = '100%';
+                            textOverlay.style.margin = '0 auto';
+                            textOverlay.style.textAlign = 'center';
                             textOverlay.style.transform = 'none';
                             break;
                     }

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Diaporamas</title>
     <link rel="stylesheet" href="/styles/common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #3498db;
@@ -108,6 +109,7 @@
             position: relative;
             width: 200px;
             height: 120px;
+            overflow: hidden;
         }
 
         .preview-container img {
@@ -369,36 +371,31 @@
             position: absolute;
             padding: 5px;
             border-radius: 4px;
-            max-width: 90%;
+            width: 100%;
+            box-sizing: border-box;
             word-wrap: break-word;
-            background: rgba(0, 0, 0, 0.5);
+            text-align: center;
+            left: 0;
+            right: 0;
+            transform: none;
         }
 
-        .preview-text.top-left {
+        .preview-text.top-center {
             top: 5px;
-            left: 5px;
-        }
-
-        .preview-text.top-right {
-            top: 5px;
-            right: 5px;
         }
 
         .preview-text.center {
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
+            transform: translateY(-50%);
         }
 
-        .preview-text.bottom-left {
+        .preview-text.bottom-center {
             bottom: 5px;
-            left: 5px;
         }
 
-        .preview-text.bottom-right {
-            bottom: 5px;
-            right: 5px;
+        .preview-text.with-background {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
         }
 
         .emoji-picker {
@@ -577,7 +574,8 @@
                                 textPosition: media.textPosition || 'top-left',
                                 fontWeight: media.fontWeight || 'normal',
                                 fontStyle: media.fontStyle || 'normal',
-                                enabled: true
+                                enabled: true,
+                                hasBackground: media.hasBackground || false
                             })),
                             schedules: []
                         },
@@ -595,7 +593,8 @@
                                 textPosition: media.textPosition || 'top-left',
                                 fontWeight: media.fontWeight || 'normal',
                                 fontStyle: media.fontStyle || 'normal',
-                                enabled: true
+                                enabled: true,
+                                hasBackground: media.hasBackground || false
                             })),
                             schedules: []
                         }
@@ -852,6 +851,7 @@
                             title="Commentaire">
                         <div class="text-controls">
                             <select class="font-select" title="Police">
+                                <option value="Dancing Script">Manuscrit</option>
                                 <option value="Arial">Arial</option>
                                 <option value="Times New Roman">Times New Roman</option>
                                 <option value="Helvetica">Helvetica</option>
@@ -875,12 +875,18 @@
                                 value="${data.textColor || '#ffffff'}" 
                                 title="Couleur">
                             <select class="position-select" title="Position">
-                                <option value="top-left">Haut Gauche</option>
-                                <option value="top-right">Haut Droite</option>
-                                <option value="center">Centre</option>
-                                <option value="bottom-left">Bas Gauche</option>
-                                <option value="bottom-right">Bas Droite</option>
+                                <option value="top-left" ${data.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
+                                <option value="top-center" ${data.textPosition === 'top-center' ? 'selected' : ''}>Haut Centre</option>
+                                <option value="top-right" ${data.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
+                                <option value="center" ${data.textPosition === 'center' ? 'selected' : ''}>Centre</option>
+                                <option value="bottom-left" ${data.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
+                                <option value="bottom-center" ${data.textPosition === 'bottom-center' ? 'selected' : ''}>Bas Centre</option>
+                                <option value="bottom-right" ${data.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
                             </select>
+                            <div class="background-control">
+                                <input type="checkbox" id="backgroundToggle" class="background-toggle" onchange="updatePreview(this)">
+                                <label for="backgroundToggle">Fond semi-transparent</label>
+                            </div>
                             <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
                         </div>
                     </div>
@@ -899,13 +905,24 @@
             const fontSizeInput = timelineItem.querySelector('.font-size-input');
             const colorPicker = timelineItem.querySelector('.color-picker');
             const positionSelect = timelineItem.querySelector('.position-select');
+            const backgroundToggle = timelineItem.querySelector('.background-toggle');
 
+            // Réinitialiser toutes les classes
+            previewText.className = 'preview-text';
+            
+            // Ajouter la position
+            previewText.classList.add(positionSelect.value);
+            
+            // Ajouter le fond uniquement si la case est cochée
+            if (backgroundToggle && backgroundToggle.checked) {
+                previewText.classList.add('with-background');
+            }
+
+            // Mettre à jour les autres styles
             previewText.textContent = commentInput.value;
             previewText.style.fontFamily = fontSelect.value;
             previewText.style.fontSize = `${fontSizeInput.value}px`;
             previewText.style.color = colorPicker.value;
-            
-            previewText.className = 'preview-text ' + positionSelect.value;
         }
 
         // Fonction pour mettre à jour les données de la timeline
@@ -925,7 +942,8 @@
                     textColor: content.querySelector('.color-picker').value,
                     textPosition: content.querySelector('.position-select').value,
                     fontWeight: content.querySelector('.font-weight-select')?.value || 'normal',
-                    fontStyle: content.querySelector('.font-style-select')?.value || 'normal'
+                    fontStyle: content.querySelector('.font-style-select')?.value || 'normal',
+                    hasBackground: content.querySelector('.background-toggle').checked
                 };
             });
 
@@ -1002,6 +1020,7 @@
                             value="${media.comment || ''}" title="Commentaire">
                         <div class="text-controls">
                             <select class="font-select" title="Police">
+                                <option value="Dancing Script" ${media.fontFamily === 'Dancing Script' ? 'selected' : ''}>Manuscrit</option>
                                 <option value="Arial" ${media.fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
                                 <option value="Times New Roman" ${media.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
                                 <option value="Helvetica" ${media.fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
@@ -1025,13 +1044,21 @@
                                 value="${media.textColor || '#ffffff'}" 
                                 title="Couleur">
                             <select class="position-select" title="Position">
-                            <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
-                            <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
-                            <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
-                            <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
-                            <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
-                        </select>
-                        <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
+                                <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
+                                <option value="top-center" ${media.textPosition === 'top-center' ? 'selected' : ''}>Haut Centre</option>
+                                <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
+                                <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
+                                <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
+                                <option value="bottom-center" ${media.textPosition === 'bottom-center' ? 'selected' : ''}>Bas Centre</option>
+                                <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
+                            </select>
+                            <div class="background-control">
+                                <input type="checkbox" id="backgroundToggle" class="background-toggle" 
+                                       onchange="updatePreview(this)"
+                                       ${media.hasBackground ? 'checked' : ''}>
+                                <label for="backgroundToggle">Fond semi-transparent</label>
+                            </div>
+                            <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
                         </div>
                     </div>
                 </div>
