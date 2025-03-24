@@ -722,7 +722,8 @@ const CACHE_KEYS = {
     CUISINE_PHOTOS: 'cuisine_photos',
     DIRECTION_DOCS: 'direction_docs',
     CUISINE_DOCS: 'cuisine_docs',
-    DIAPORAMA_CONFIG: 'diaporama_config'
+    DIAPORAMA_CONFIG: 'diaporama_config',
+    MEDIA_LIST: (section, type) => `media_list_${section}_${type}`
 };
 
 const CACHE_DURATIONS = {
@@ -774,14 +775,11 @@ app.post('/api/diaporama-config', async (req, res) => {
 // Route pour récupérer la configuration des diaporamas
 app.get('/api/diaporama-config', async (req, res) => {
     try {
-        // Try to get from cache first
         const cachedConfig = cache.get(CACHE_KEYS.DIAPORAMA_CONFIG);
         if (cachedConfig) {
-            console.log('Serving diaporama config from cache');
             return res.json(cachedConfig);
         }
 
-        // If not in cache, get from blob storage
         const { blobs } = await list({ prefix: 'config/' });
         const configBlobs = blobs
             .filter(b => b.pathname === 'config/diaporama-config.json')
@@ -1061,27 +1059,37 @@ fs.mkdir(timelineDataPath, { recursive: true }).catch(console.error);
 app.get('/api/list-media/:section/:type', async (req, res) => {
     try {
         const { section, type } = req.params;
+        const cacheKey = CACHE_KEYS.MEDIA_LIST(section, type);
+        
+        // Vérifier le cache d'abord
+        const cachedMedia = cache.get(cacheKey);
+        if (cachedMedia) {
+            return res.json(cachedMedia);
+        }
 
+        let media;
         if (type === 'photos') {
             const { blobs } = await list({ prefix: `${section}/` });
-            const photos = blobs.map(blob => ({
+            media = blobs.map(blob => ({
                 name: blob.pathname.split('/').pop(),
                 url: blob.url,
                 type: 'image'
             }));
-            res.json(photos);
         } else if (type === 'documents') {
             const { blobs } = await list({ prefix: `${section}-docs/` });
-            const documents = blobs.map(blob => ({
+            media = blobs.map(blob => ({
                 name: blob.pathname.split('/').pop(),
                 url: blob.url,
                 type: 'document',
                 originalName: blob.pathname.split('/').pop()
             }));
-            res.json(documents);
         }
+
+        // Mettre en cache pour 5 minutes
+        cache.set(cacheKey, media, 300);
+        res.json(media);
     } catch (error) {
-        console.error('Erreur lors de la lecture des médias:', error);
+        console.error('Erreur:', error);
         res.status(500).json({ error: error.message });
     }
 });

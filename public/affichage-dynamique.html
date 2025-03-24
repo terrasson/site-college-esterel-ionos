@@ -679,11 +679,23 @@
     // Fonction de chargement des configurations
     async function loadConfigurations() {
         try {
+            const cacheKey = 'diaporama_config_timestamp';
+            const lastCheck = sessionStorage.getItem(cacheKey);
+            const now = Date.now();
+
+            // Ne vérifier que toutes les 30 secondes
+            if (lastCheck && (now - parseInt(lastCheck)) < 30000) {
+                return;
+            }
+
             console.log('Vérification des configurations...');
             const response = await fetch('/api/diaporama-config');
             const config = await response.json();
 
-            // Vérifier si la configuration a changé avant de réinitialiser
+            // Mettre à jour le timestamp
+            sessionStorage.setItem(cacheKey, now.toString());
+
+            // Vérifier si la configuration a changé
             const configChanged = JSON.stringify(config) !== JSON.stringify({
                 cuisine: cuisineConfig,
                 direction: directionConfig
@@ -692,30 +704,24 @@
             if (configChanged) {
                 console.log('Nouvelle configuration détectée');
                 
-                // Annuler les timeouts existants
                 if (cuisineTimeout) clearTimeout(cuisineTimeout);
                 if (directionTimeout) clearTimeout(directionTimeout);
 
-                // Mettre à jour les configurations
-                if (config.cuisine && config.cuisine.medias && config.cuisine.medias.length > 0) {
+                if (config.cuisine?.medias?.length > 0) {
                     cuisineConfig = config.cuisine;
-                    // Ne pas réinitialiser l'index sauf si nécessaire
                     if (cuisineIndex >= cuisineConfig.medias.length) {
                         cuisineIndex = 0;
                     }
                     showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
                 }
 
-                if (config.direction && config.direction.medias && config.direction.medias.length > 0) {
+                if (config.direction?.medias?.length > 0) {
                     directionConfig = config.direction;
-                    // Ne pas réinitialiser l'index sauf si nécessaire
                     if (directionIndex >= directionConfig.medias.length) {
                         directionIndex = 0;
                     }
                     showMedia('direction', directionConfig.medias[directionIndex]);
                 }
-            } else {
-                console.log('Pas de changement dans la configuration');
             }
         } catch (error) {
             console.error('Erreur lors de la vérification des configurations:', error);
@@ -868,8 +874,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initialisation du diaporama...');
         loadConfigurations();
-        // Recharger les configurations toutes les 30 secondes
-        setInterval(loadConfigurations, 30000);
+        // Augmenter l'intervalle à 60 secondes au lieu de 30
+        setInterval(loadConfigurations, 60000);
     });
 
     document.addEventListener('DOMContentLoaded', () => {
