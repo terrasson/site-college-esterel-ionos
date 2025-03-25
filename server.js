@@ -737,27 +737,37 @@ app.post('/api/diaporama-config', async (req, res) => {
     try {
         const config = {
             cuisine: {
-                medias: Array.isArray(req.body?.cuisine?.medias) ? req.body.cuisine.medias : [],
+                medias: Array.isArray(req.body?.cuisine?.medias) ? req.body.cuisine.medias.map(media => ({
+                    ...media,
+                    fontFamily: media.fontFamily || 'Arial', // S'assurer que fontFamily est préservé
+                    fontSize: parseInt(media.fontSize) || 24,
+                    textColor: media.textColor || '#ffffff',
+                    textPosition: media.textPosition || 'top-left',
+                    fontWeight: media.fontWeight || 'normal',
+                    fontStyle: media.fontStyle || 'normal',
+                    hasBackground: Boolean(media.hasBackground)
+                })) : [],
                 schedules: Array.isArray(req.body?.cuisine?.schedules) ? req.body.cuisine.schedules : []
             },
             direction: {
-                medias: Array.isArray(req.body?.direction?.medias) ? req.body.direction.medias : [],
+                medias: Array.isArray(req.body?.direction?.medias) ? req.body.direction.medias.map(media => ({
+                    ...media,
+                    fontFamily: media.fontFamily || 'Arial', // S'assurer que fontFamily est préservé
+                    fontSize: parseInt(media.fontSize) || 24,
+                    textColor: media.textColor || '#ffffff',
+                    textPosition: media.textPosition || 'top-left',
+                    fontWeight: media.fontWeight || 'normal',
+                    fontStyle: media.fontStyle || 'normal',
+                    hasBackground: Boolean(media.hasBackground)
+                })) : [],
                 schedules: Array.isArray(req.body?.direction?.schedules) ? req.body.direction.schedules : []
             }
         };
 
-        console.log('Sauvegarde de la configuration...', {
-            cuisineMedias: config.cuisine.medias.length,
-            directionMedias: config.direction.medias.length
-        });
-
-        const { url } = await put('config/diaporama-config.json',
-            JSON.stringify(config, null, 2), {
+        const { url } = await put('config/diaporama-config.json', JSON.stringify(config, null, 2), {
             access: 'public',
             contentType: 'application/json'
         });
-
-        console.log('Configuration sauvegardée avec succès:', url);
 
         // Mettre à jour le cache
         cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config, CACHE_DURATIONS.CONFIG);

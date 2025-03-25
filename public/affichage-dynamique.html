@@ -750,8 +750,12 @@
                 if (media.comment && media.comment.trim() !== '') {
                     textOverlay.textContent = media.comment;
                     
-                    // Application des styles de base
-                    textOverlay.style.fontFamily = media.fontFamily || 'Arial';
+                    // Application des styles de base avec vérification spécifique pour Dancing Script
+                    if (media.fontFamily === 'Dancing Script') {
+                        textOverlay.style.fontFamily = "'Dancing Script', cursive";
+                    } else {
+                        textOverlay.style.fontFamily = media.fontFamily || 'Arial';
+                    }
                     textOverlay.style.fontSize = `${media.fontSize || 24}px`;
                     textOverlay.style.color = media.textColor || '#ffffff';
                     textOverlay.style.fontWeight = media.fontWeight || 'normal';
