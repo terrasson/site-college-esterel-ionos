@@ -746,25 +746,21 @@ app.post('/api/diaporama-config', async (req, res) => {
             }
         };
 
-        // Vérifier si la configuration existe déjà
-        const { blobs } = await list({ prefix: 'config/' });
-        const existingConfig = blobs.find(b => b.pathname === 'config/diaporama-config.json');
+        console.log('Sauvegarde de la configuration...', {
+            cuisineMedias: config.cuisine.medias.length,
+            directionMedias: config.direction.medias.length
+        });
 
-        // Si une configuration existe, la supprimer d'abord
-        if (existingConfig) {
-            await del(existingConfig.url);
-        }
-
-        // Sauvegarder la nouvelle configuration
         const { url } = await put('config/diaporama-config.json',
             JSON.stringify(config, null, 2), {
             access: 'public',
-            contentType: 'application/json',
-            token: process.env.BLOB_READ_WRITE_TOKEN // Ajouter le token
+            contentType: 'application/json'
         });
 
+        console.log('Configuration sauvegardée avec succès:', url);
+
         // Mettre à jour le cache
-        cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config);
+        cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config, CACHE_DURATIONS.CONFIG);
 
         res.json({
             success: true,
@@ -781,57 +777,36 @@ app.post('/api/diaporama-config', async (req, res) => {
     }
 });
 
-// Route pour récupérer la configuration des diaporamas
+// Optimiser la route GET pour utiliser le cache plus efficacement
 app.get('/api/diaporama-config', async (req, res) => {
     try {
+        // Vérifier d'abord le cache
         const cachedConfig = cache.get(CACHE_KEYS.DIAPORAMA_CONFIG);
         if (cachedConfig) {
             return res.json(cachedConfig);
         }
 
+        // Si pas en cache, récupérer depuis Blob une seule fois
         const { blobs } = await list({ prefix: 'config/' });
-        const configBlobs = blobs
-            .filter(b => b.pathname === 'config/diaporama-config.json')
-            .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+        const configBlob = blobs.find(b => b.pathname === 'config/diaporama-config.json');
 
-        const configBlob = configBlobs[0];
-
+        let config;
         if (configBlob) {
             const response = await fetch(configBlob.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch config: ${response.status}`);
-            }
-            const config = await response.json();
-
-            // Cache the result
-            cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config);
-            console.log('Cached new diaporama config');
-
-            return res.json(config);
+            config = await response.json();
+        } else {
+            config = {
+                cuisine: { medias: [], schedules: [] },
+                direction: { medias: [], schedules: [] }
+            };
         }
 
-        // Default config if none exists
-        const emptyConfig = {
-            cuisine: { medias: [], schedules: [] },
-            direction: { medias: [], schedules: [] }
-        };
-
-        // Save and cache empty config
-        const { url } = await put('config/diaporama-config.json',
-            JSON.stringify(emptyConfig, null, 2), {
-            access: 'public',
-            contentType: 'application/json'
-        });
-
-        cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, emptyConfig);
-        res.json(emptyConfig);
-
+        // Mettre en cache pour 5 minutes
+        cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config, CACHE_DURATIONS.CONFIG);
+        res.json(config);
     } catch (error) {
         console.error('Error loading diaporama config:', error);
-        res.status(500).json({
-            error: 'Error loading configuration',
-            details: error.message
-        });
+        res.status(500).json({ error: error.message });
     }
 });
 
