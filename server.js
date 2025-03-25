@@ -746,16 +746,25 @@ app.post('/api/diaporama-config', async (req, res) => {
             }
         };
 
-        // Save to blob storage
+        // Vérifier si la configuration existe déjà
+        const { blobs } = await list({ prefix: 'config/' });
+        const existingConfig = blobs.find(b => b.pathname === 'config/diaporama-config.json');
+
+        // Si une configuration existe, la supprimer d'abord
+        if (existingConfig) {
+            await del(existingConfig.url);
+        }
+
+        // Sauvegarder la nouvelle configuration
         const { url } = await put('config/diaporama-config.json',
             JSON.stringify(config, null, 2), {
             access: 'public',
-            contentType: 'application/json'
+            contentType: 'application/json',
+            token: process.env.BLOB_READ_WRITE_TOKEN // Ajouter le token
         });
 
-        // Update cache
+        // Mettre à jour le cache
         cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config);
-        console.log('Updated diaporama config cache');
 
         res.json({
             success: true,

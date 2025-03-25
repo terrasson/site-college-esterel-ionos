@@ -552,57 +552,63 @@
                 // Mettre à jour les données avant la sauvegarde
                 updateTimelineData();
 
-                console.log('Données à sauvegarder:', timelineData);
+                // Vérifier que les données sont valides
+                if (!timelineData.cuisine || !timelineData.direction) {
+                    throw new Error('Données de timeline invalides');
+                }
+
+                // Nettoyer les données avant l'envoi
+                const cleanConfig = {
+                    cuisine: {
+                        medias: timelineData.cuisine.medias.map(media => ({
+                            type: media.type || 'image',
+                            path: media.path,
+                            name: media.name,
+                            duration: parseInt(media.duration) || 5,
+                            transition: media.transition || 'fade',
+                            comment: media.comment || '',
+                            fontFamily: media.fontFamily || 'Arial',
+                            fontSize: parseInt(media.fontSize) || 24,
+                            textColor: media.textColor || '#ffffff',
+                            textPosition: media.textPosition || 'top-left',
+                            fontWeight: media.fontWeight || 'normal',
+                            fontStyle: media.fontStyle || 'normal',
+                            enabled: true,
+                            hasBackground: Boolean(media.hasBackground)
+                        })).filter(media => media.path && media.name),
+                        schedules: []
+                    },
+                    direction: {
+                        medias: timelineData.direction.medias.map(media => ({
+                            type: media.type || 'image',
+                            path: media.path,
+                            name: media.name,
+                            duration: parseInt(media.duration) || 5,
+                            transition: media.transition || 'fade',
+                            comment: media.comment || '',
+                            fontFamily: media.fontFamily || 'Arial',
+                            fontSize: parseInt(media.fontSize) || 24,
+                            textColor: media.textColor || '#ffffff',
+                            textPosition: media.textPosition || 'top-left',
+                            fontWeight: media.fontWeight || 'normal',
+                            fontStyle: media.fontStyle || 'normal',
+                            enabled: true,
+                            hasBackground: Boolean(media.hasBackground)
+                        })).filter(media => media.path && media.name),
+                        schedules: []
+                    }
+                };
 
                 const response = await fetch('/api/diaporama-config', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        cuisine: {
-                            medias: timelineData.cuisine.medias.map(media => ({
-                                type: media.type,
-                                path: media.path,
-                                name: media.name,
-                                duration: parseInt(media.duration) || 5,
-                                transition: media.transition || 'fade',
-                                comment: media.comment || '',
-                                fontFamily: media.fontFamily || 'Arial',
-                                fontSize: parseInt(media.fontSize) || 24,
-                                textColor: media.textColor || '#ffffff',
-                                textPosition: media.textPosition || 'top-left',
-                                fontWeight: media.fontWeight || 'normal',
-                                fontStyle: media.fontStyle || 'normal',
-                                enabled: true,
-                                hasBackground: media.hasBackground || false
-                            })),
-                            schedules: []
-                        },
-                        direction: {
-                            medias: timelineData.direction.medias.map(media => ({
-                                type: media.type,
-                                path: media.path,
-                                name: media.name,
-                                duration: parseInt(media.duration) || 5,
-                                transition: media.transition || 'fade',
-                                comment: media.comment || '',
-                                fontFamily: media.fontFamily || 'Arial',
-                                fontSize: parseInt(media.fontSize) || 24,
-                                textColor: media.textColor || '#ffffff',
-                                textPosition: media.textPosition || 'top-left',
-                                fontWeight: media.fontWeight || 'normal',
-                                fontStyle: media.fontStyle || 'normal',
-                                enabled: true,
-                                hasBackground: media.hasBackground || false
-                            })),
-                            schedules: []
-                        }
-                    })
+                    body: JSON.stringify(cleanConfig)
                 });
 
                 if (!response.ok) {
-                    throw new Error('Erreur lors de la sauvegarde');
+                    throw new Error(`Erreur HTTP: ${response.status}`);
                 }
 
                 const result = await response.json();
@@ -610,7 +616,7 @@
                 showNotification('Diaporama sauvegardé avec succès', 'success');
 
             } catch (error) {
-                console.error('Erreur lors de la sauvegarde:', error);
+                console.error('Erreur détaillée:', error);
                 showNotification('Erreur lors de la sauvegarde: ' + error.message, 'error');
             }
         }
