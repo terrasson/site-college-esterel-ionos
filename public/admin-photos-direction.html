@@ -300,6 +300,7 @@
         async function rotateImage(filename, degrees) {
             try {
                 const card = elements.photosGrid.querySelector(`[data-filename="${filename}"]`);
+                const img = card?.querySelector('img');
                 if (card) {
                     card.style.opacity = '0.5';
                 }
@@ -317,8 +318,14 @@
                 });
 
                 if (response.ok) {
+                    const data = await response.json();
+                    if (img && data.url) {
+                        img.src = data.url; // Mettre à jour directement l'URL de l'image avec le timestamp
+                    }
+                    if (card) {
+                        card.style.opacity = '1';
+                    }
                     showStatus('Photo pivotée avec succès !', true);
-                    await loadPhotos();
                 } else {
                     if (card) {
                         card.style.opacity = '1';

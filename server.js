@@ -12,6 +12,10 @@ const sharp = require('sharp');
 const { put, list, del } = require('@vercel/blob');
 const NodeCache = require('node-cache');
 
+// Fonction utilitaire pour les chemins de fichiers
+const UPLOAD_BASE_PATH = path.join(__dirname, 'uploads');
+const getUploadPath = (type) => path.join(UPLOAD_BASE_PATH, type);
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -19,6 +23,9 @@ const port = process.env.PORT || 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static('public'));
+
+// Middleware pour servir les fichiers uploadés
+app.use('/uploads', express.static(UPLOAD_BASE_PATH));
 
 // Rate limiting
 const loginLimiter = rateLimit({
@@ -182,7 +189,27 @@ app.post('/api/ticker-message', async (req, res) => {
 });
 
 // Configuration de multer pour l'upload des images
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // Déterminer le dossier de destination en fonction du type d'upload
+        const type = req.path.includes('cuisine') ? 'cuisine' : 
+                    req.path.includes('direction') ? 'direction' : 'documents';
+        const uploadPath = getUploadPath(type);
+        // Créer le dossier s'il n'existe pas
+        fs.mkdir(uploadPath, { recursive: true })
+            .then(() => cb(null, uploadPath))
+            .catch(err => cb(err));
+    },
+    filename: function (req, file, cb) {
+        const prefix = req.path.includes('cuisine') ? 'cuisine_' :
+                      req.path.includes('direction') ? 'direction_' : 'doc_';
+        // Générer un nom de fichier unique
+        const uniqueSuffix = Date.now();
+        const ext = path.extname(file.originalname);
+        cb(null, `${prefix}${uniqueSuffix}${ext}`);
+    }
+});
+
 const upload = multer({
     storage: storage,
     limits: {
@@ -190,8 +217,16 @@ const upload = multer({
         files: 10 // max 10 fichiers à la fois
     },
     fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
+        if (req.path.includes('photo') && !file.mimetype.startsWith('image/')) {
             return cb(new Error('Seules les images sont acceptées'), false);
+        }
+        if (req.path.includes('document')) {
+            const filetypes = /pdf|doc|docx|ppt|pptx/;
+            const mimetype = filetypes.test(file.mimetype);
+            const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+            if (!mimetype || !extname) {
+                return cb(new Error('Seuls les fichiers PDF, Word et PowerPoint sont autorisés!'));
+            }
         }
         cb(null, true);
     }
@@ -204,30 +239,85 @@ app.post('/api/upload-cuisine-photo', upload.single('photo'), async (req, res) =
             return res.status(400).json({ message: 'Aucune image fournie' });
         }
 
-        const filename = `cuisine_${Date.now()}.webp`;
+        // L'image est déjà enregistrée par multer, nous devons juste la traiter avec sharp
+        const outputFilename = req.file.filename.replace(path.extname(req.file.filename), '.webp');
+        const outputPath = path.join(req.file.destination, outputFilename);
 
-        // Process image with Sharp first
-        const processedImageBuffer = await sharp(req.file.buffer)
+        // Process image with Sharp
+        await sharp(req.file.path)
             .resize(1200, 1200, {
                 fit: 'inside',
                 withoutEnlargement: true
             })
             .webp({ quality: 80 })
-            .toBuffer();
+            .toFile(outputPath);
 
-        // Upload to Vercel Blob
-        const { url } = await put(`cuisine/${filename}`, processedImageBuffer, {
-            access: 'public',
-            contentType: 'image/webp'
-        });
+        // Supprimer le fichier original
+        await fs.unlink(req.file.path);
+
+        // Construire l'URL relative
+        const relativeUrl = path.join('uploads', 'cuisine', outputFilename);
 
         res.json({
             message: 'Image téléchargée avec succès',
-            filename: filename,
-            url: url
+            filename: outputFilename,
+            url: relativeUrl
         });
     } catch (error) {
         console.error('Erreur lors du traitement de l\'image:', error);
+        // Si une erreur survient, essayer de supprimer le fichier uploadé
+        if (req.file) {
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.error('Erreur lors de la suppression du fichier:', unlinkError);
+            }
+        }
+        res.status(500).json({ message: 'Erreur lors du traitement de l\'image' });
+    }
+});
+
+// Route pour uploader une photo de direction
+app.post('/api/upload-direction-photo', upload.single('photo'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Aucune image fournie' });
+        }
+
+        // L'image est déjà enregistrée par multer, nous devons juste la traiter avec sharp
+        const outputFilename = req.file.filename.replace(path.extname(req.file.filename), '.webp');
+        const outputPath = path.join(req.file.destination, outputFilename);
+
+        // Process image with Sharp
+        await sharp(req.file.path)
+            .resize(1200, 1200, {
+                fit: 'inside',
+                withoutEnlargement: true
+            })
+            .webp({ quality: 80 })
+            .toFile(outputPath);
+
+        // Supprimer le fichier original
+        await fs.unlink(req.file.path);
+
+        // Construire l'URL relative
+        const relativeUrl = path.join('uploads', 'direction', outputFilename);
+
+        res.json({
+            message: 'Image téléchargée avec succès',
+            filename: outputFilename,
+            url: relativeUrl
+        });
+    } catch (error) {
+        console.error('Erreur lors du traitement de l\'image:', error);
+        // Si une erreur survient, essayer de supprimer le fichier uploadé
+        if (req.file) {
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.error('Erreur lors de la suppression du fichier:', unlinkError);
+            }
+        }
         res.status(500).json({ message: 'Erreur lors du traitement de l\'image' });
     }
 });
@@ -235,24 +325,32 @@ app.post('/api/upload-cuisine-photo', upload.single('photo'), async (req, res) =
 // Route pour récupérer la liste des photos
 app.get('/api/cuisine-photos', async (req, res) => {
     try {
-        // Vérifier le cache d'abord
-        const cachedPhotos = cache.get(CACHE_KEYS.CUISINE_PHOTOS);
-        if (cachedPhotos) {
-            return res.json(cachedPhotos);
+        const uploadPath = getUploadPath('cuisine');
+        
+        // Vérifier si le dossier existe
+        try {
+            await fs.access(uploadPath);
+        } catch (error) {
+            // Créer le dossier s'il n'existe pas
+            await fs.mkdir(uploadPath, { recursive: true });
+            return res.json([]);
         }
 
-        const { blobs } = await list({ prefix: 'cuisine/' });
-        const images = blobs.map(blob => ({
-            filename: blob.pathname.split('/').pop(),
-            url: blob.url
-        }));
+        // Lire le contenu du dossier
+        const files = await fs.readdir(uploadPath);
+        
+        // Filtrer et formater les résultats
+        const images = files
+            .filter(file => file.endsWith('.webp')) // Ne garder que les images webp
+            .map(filename => ({
+                filename: filename,
+                url: `/uploads/cuisine/${filename}`
+            }));
 
-        // Mettre en cache pour 5 minutes
-        cache.set(CACHE_KEYS.CUISINE_PHOTOS, images, CACHE_DURATIONS.PHOTOS);
         res.json(images);
     } catch (error) {
-        console.error('Erreur:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Erreur lors de la lecture des photos:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des photos' });
     }
 });
 
@@ -260,20 +358,17 @@ app.get('/api/cuisine-photos', async (req, res) => {
 app.delete('/api/cuisine-photos/:filename', async (req, res) => {
     try {
         const filename = req.params.filename;
+        const filePath = path.join(getUploadPath('cuisine'), filename);
 
-        // Obtenir la liste des blobs existants
-        const { blobs } = await list();
-
-        // Trouver le blob exact à supprimer
-        const blobToDelete = blobs.find(blob => blob.pathname === `cuisine/${filename}`);
-
-        if (!blobToDelete) {
+        // Vérifier si le fichier existe
+        try {
+            await fs.access(filePath);
+        } catch (error) {
             return res.status(404).json({ message: 'Photo non trouvée' });
         }
 
-        // Supprimer en utilisant l'URL complète
-        await del(blobToDelete.url);
-
+        // Supprimer le fichier
+        await fs.unlink(filePath);
         res.json({ message: 'Photo supprimée avec succès' });
     } catch (error) {
         console.error('Erreur lors de la suppression de la photo:', error);
@@ -334,60 +429,35 @@ app.get('/api/images-list', async (req, res) => {
     }
 });
 
-// Route pour uploader une photo de direction
-app.post('/api/upload-direction-photo', upload.single('photo'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Aucune image fournie' });
-        }
-
-        const filename = `direction_${Date.now()}.webp`;
-
-        const processedImageBuffer = await sharp(req.file.buffer)
-            .resize(1200, 1200, {
-                fit: 'inside',
-                withoutEnlargement: true
-            })
-            .webp({ quality: 80 })
-            .toBuffer();
-
-        const { url } = await put(`direction/${filename}`, processedImageBuffer, {
-            access: 'public',
-            contentType: 'image/webp'
-        });
-
-        res.json({
-            message: 'Image téléchargée avec succès',
-            filename: filename,
-            url: url
-        });
-    } catch (error) {
-        console.error('Erreur lors du traitement de l\'image:', error);
-        res.status(500).json({ message: 'Erreur lors du traitement de l\'image' });
-    }
-});
-
 // Route pour récupérer la liste des photos de direction
 app.get('/api/direction-photos', async (req, res) => {
     try {
-        // Vérifier le cache d'abord
-        const cachedPhotos = cache.get(CACHE_KEYS.DIRECTION_PHOTOS);
-        if (cachedPhotos) {
-            return res.json(cachedPhotos);
+        const uploadPath = getUploadPath('direction');
+        
+        // Vérifier si le dossier existe
+        try {
+            await fs.access(uploadPath);
+        } catch (error) {
+            // Créer le dossier s'il n'existe pas
+            await fs.mkdir(uploadPath, { recursive: true });
+            return res.json([]);
         }
 
-        const { blobs } = await list({ prefix: 'direction/' });
-        const photos = blobs.map(blob => ({
-            filename: blob.pathname.split('/').pop(),
-            url: blob.url
-        }));
+        // Lire le contenu du dossier
+        const files = await fs.readdir(uploadPath);
+        
+        // Filtrer et formater les résultats
+        const images = files
+            .filter(file => file.endsWith('.webp')) // Ne garder que les images webp
+            .map(filename => ({
+                filename: filename,
+                url: `/uploads/direction/${filename}`
+            }));
 
-        // Mettre en cache pour 5 minutes
-        cache.set(CACHE_KEYS.DIRECTION_PHOTOS, photos, CACHE_DURATIONS.PHOTOS);
-        res.json(photos);
+        res.json(images);
     } catch (error) {
-        console.error('Erreur:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Erreur lors de la lecture des photos:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des photos' });
     }
 });
 
@@ -395,168 +465,21 @@ app.get('/api/direction-photos', async (req, res) => {
 app.delete('/api/direction-photos/:filename', async (req, res) => {
     try {
         const filename = req.params.filename;
-        const { blobs } = await list({ prefix: 'direction/' });
-        const blobToDelete = blobs.find(blob => blob.pathname === `direction/${filename}`);
+        const filePath = path.join(getUploadPath('direction'), filename);
 
-        if (!blobToDelete) {
+        // Vérifier si le fichier existe
+        try {
+            await fs.access(filePath);
+        } catch (error) {
             return res.status(404).json({ message: 'Photo non trouvée' });
         }
 
-        await del(blobToDelete.url);
-        invalidateCache(CACHE_KEYS.DIRECTION_PHOTOS);
-
+        // Supprimer le fichier
+        await fs.unlink(filePath);
         res.json({ message: 'Photo supprimée avec succès' });
     } catch (error) {
         console.error('Erreur lors de la suppression de la photo:', error);
         res.status(500).json({ message: 'Erreur lors de la suppression de la photo' });
-    }
-});
-
-// Configuration pour l'upload des documents (cuisine et direction)
-const documentUpload = multer({
-    storage: multer.memoryStorage(),
-    fileFilter: (req, file, cb) => {
-        const filetypes = /pdf|doc|docx|ppt|pptx/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimetype && extname) {
-            return cb(null, true);
-        }
-        cb(new Error('Seuls les fichiers PDF, Word et PowerPoint sont autorisés!'));
-    },
-    limits: {
-        fileSize: 10 * 1024 * 1024 // Limite à 10MB
-    }
-});
-
-// Route pour l'upload des documents de cuisine
-app.post('/api/upload-menu-cuisine', documentUpload.single('menu'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Aucun document fourni' });
-        }
-
-        const filename = `menu_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
-
-        // Upload to Vercel Blob
-        const { url } = await put(`cuisine-docs/${filename}`, req.file.buffer, {
-            access: 'public',
-            contentType: req.file.mimetype
-        });
-
-        res.json({
-            message: 'Document téléchargé avec succès',
-            filename: filename,
-            originalName: req.file.originalname,
-            url: url
-        });
-    } catch (error) {
-        console.error('Erreur lors du traitement du document:', error);
-        res.status(500).json({ message: 'Erreur lors du traitement du document' });
-    }
-});
-
-// Route pour récupérer la liste des menus de cuisine
-app.get('/api/menu-cuisine', async (req, res) => {
-    try {
-        const { blobs } = await list({ prefix: 'cuisine-docs/' });
-
-        const documents = blobs.map(blob => ({
-            filename: blob.pathname.split('/').pop(),
-            originalName: blob.pathname.split('/').pop().replace(/^menu_\d+_/, ''),
-            url: blob.url,
-            type: 'document'
-        }));
-
-        res.json(documents);
-    } catch (error) {
-        console.error('Erreur lors de la lecture des menus:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des menus' });
-    }
-});
-
-// Route pour supprimer un menu de cuisine
-app.delete('/api/menu-cuisine/:filename', async (req, res) => {
-    try {
-        const filename = req.params.filename;
-        const { blobs } = await list();
-        const blobToDelete = blobs.find(blob => blob.pathname === `cuisine-docs/${filename}`);
-
-        if (!blobToDelete) {
-            return res.status(404).json({ message: 'Document non trouvé' });
-        }
-
-        await del(blobToDelete.url);
-        res.json({ message: 'Document supprimé avec succès' });
-    } catch (error) {
-        console.error('Erreur lors de la suppression du document:', error);
-        res.status(500).json({ message: 'Erreur lors de la suppression du document' });
-    }
-});
-
-// Route pour l'upload des documents de direction
-app.post('/api/upload-direction-document', documentUpload.single('document'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Aucun document fourni' });
-        }
-
-        const filename = `doc_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
-
-        // Upload to Vercel Blob
-        const { url } = await put(`direction-docs/${filename}`, req.file.buffer, {
-            access: 'public',
-            contentType: req.file.mimetype
-        });
-
-        res.json({
-            message: 'Document téléchargé avec succès',
-            filename: filename,
-            originalName: req.file.originalname,
-            url: url
-        });
-    } catch (error) {
-        console.error('Erreur lors du traitement du document:', error);
-        res.status(500).json({ message: 'Erreur lors du traitement du document' });
-    }
-});
-
-// Route pour récupérer la liste des documents de direction
-app.get('/api/direction-documents', async (req, res) => {
-    try {
-        const { blobs } = await list({ prefix: 'direction-docs/' });
-
-        const documents = blobs.map(blob => ({
-            filename: blob.pathname.split('/').pop(),
-            originalName: blob.pathname.split('/').pop().replace(/^doc_\d+_/, ''),
-            url: blob.url,
-            type: 'document'
-        }));
-
-        res.json(documents);
-    } catch (error) {
-        console.error('Erreur lors de la lecture des documents:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des documents' });
-    }
-});
-
-// Route pour supprimer un document de direction
-app.delete('/api/direction-documents/:filename', async (req, res) => {
-    try {
-        const filename = req.params.filename;
-        const { blobs } = await list();
-        const blobToDelete = blobs.find(blob => blob.pathname === `direction-docs/${filename}`);
-
-        if (!blobToDelete) {
-            return res.status(404).json({ message: 'Document non trouvé' });
-        }
-
-        await del(blobToDelete.url);
-        res.json({ message: 'Document supprimé avec succès' });
-    } catch (error) {
-        console.error('Erreur lors de la suppression du document:', error);
-        res.status(500).json({ message: 'Erreur lors de la suppression du document' });
     }
 });
 
@@ -623,7 +546,8 @@ app.get('/api/menu-cuisine', async (req, res) => {
         const files = await fs.readdir(directoryPath);
         const documents = files.map(filename => ({
             filename,
-            originalName: filename.replace(/^menu_\d+-\d+_/, '')
+            originalName: filename.replace(/^menu_\d+-\d+_/, ''),
+            type: path.extname(filename).toLowerCase().substring(1)
         }));
 
         res.json(documents);
@@ -732,6 +656,24 @@ const CACHE_DURATIONS = {
     CONFIG: 60    // 1 minute
 };
 
+// Configuration du stockage
+const STORAGE_CONFIG = {
+    base_path: path.join(__dirname, 'uploads'),
+    sections: {
+        cuisine: {
+            images: 'cuisine/images',
+            documents: 'cuisine/documents'
+        },
+        direction: {
+            images: 'direction/images',
+            documents: 'direction/documents'
+        }
+    },
+    diaporama: {
+        config: 'config/diaporama-config.json'
+    }
+};
+
 // Route pour sauvegarder la configuration
 app.post('/api/diaporama-config', async (req, res) => {
     try {
@@ -739,7 +681,7 @@ app.post('/api/diaporama-config', async (req, res) => {
             cuisine: {
                 medias: Array.isArray(req.body?.cuisine?.medias) ? req.body.cuisine.medias.map(media => ({
                     ...media,
-                    fontFamily: media.fontFamily || 'Arial', // S'assurer que fontFamily est préservé
+                    fontFamily: media.fontFamily || 'Arial',
                     fontSize: parseInt(media.fontSize) || 24,
                     textColor: media.textColor || '#ffffff',
                     textPosition: media.textPosition || 'top-left',
@@ -752,7 +694,7 @@ app.post('/api/diaporama-config', async (req, res) => {
             direction: {
                 medias: Array.isArray(req.body?.direction?.medias) ? req.body.direction.medias.map(media => ({
                     ...media,
-                    fontFamily: media.fontFamily || 'Arial', // S'assurer que fontFamily est préservé
+                    fontFamily: media.fontFamily || 'Arial',
                     fontSize: parseInt(media.fontSize) || 24,
                     textColor: media.textColor || '#ffffff',
                     textPosition: media.textPosition || 'top-left',
@@ -764,22 +706,24 @@ app.post('/api/diaporama-config', async (req, res) => {
             }
         };
 
-        const { url } = await put('config/diaporama-config.json', JSON.stringify(config, null, 2), {
-            access: 'public',
-            contentType: 'application/json'
-        });
+        // Créer le dossier de configuration s'il n'existe pas
+        const configDir = path.join(STORAGE_CONFIG.base_path, 'config');
+        await fs.mkdir(configDir, { recursive: true });
+
+        // Sauvegarder la configuration dans un fichier JSON
+        const configPath = path.join(configDir, 'diaporama-config.json');
+        await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
         // Mettre à jour le cache
         cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config, CACHE_DURATIONS.CONFIG);
 
         res.json({
             success: true,
-            message: 'Configuration saved successfully',
-            config: config,
-            url: url
+            message: 'Configuration sauvegardée avec succès',
+            config: config
         });
     } catch (error) {
-        console.error('Error saving diaporama config:', error);
+        console.error('Erreur lors de la sauvegarde de la configuration du diaporama:', error);
         res.status(500).json({
             success: false,
             error: error.message
@@ -787,7 +731,7 @@ app.post('/api/diaporama-config', async (req, res) => {
     }
 });
 
-// Optimiser la route GET pour utiliser le cache plus efficacement
+// Route pour récupérer la configuration
 app.get('/api/diaporama-config', async (req, res) => {
     try {
         // Vérifier d'abord le cache
@@ -796,26 +740,26 @@ app.get('/api/diaporama-config', async (req, res) => {
             return res.json(cachedConfig);
         }
 
-        // Si pas en cache, récupérer depuis Blob une seule fois
-        const { blobs } = await list({ prefix: 'config/' });
-        const configBlob = blobs.find(b => b.pathname === 'config/diaporama-config.json');
-
+        // Si pas en cache, lire depuis le fichier
+        const configPath = path.join(STORAGE_CONFIG.base_path, 'config', 'diaporama-config.json');
         let config;
-        if (configBlob) {
-            const response = await fetch(configBlob.url);
-            config = await response.json();
-        } else {
+
+        try {
+            const configData = await fs.readFile(configPath, 'utf8');
+            config = JSON.parse(configData);
+        } catch (error) {
+            // Si le fichier n'existe pas, retourner une configuration vide
             config = {
                 cuisine: { medias: [], schedules: [] },
                 direction: { medias: [], schedules: [] }
             };
         }
 
-        // Mettre en cache pour 5 minutes
+        // Mettre en cache
         cache.set(CACHE_KEYS.DIAPORAMA_CONFIG, config, CACHE_DURATIONS.CONFIG);
         res.json(config);
     } catch (error) {
-        console.error('Error loading diaporama config:', error);
+        console.error('Erreur lors du chargement de la configuration du diaporama:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -1049,41 +993,36 @@ const timelineDataPath = path.join(__dirname, 'data', 'timelines');
 // Assurer que le dossier des timelines existe
 fs.mkdir(timelineDataPath, { recursive: true }).catch(console.error);
 
-// Route pour lister les médias (photos et documents)
-app.get('/api/list-media/:section/:type', async (req, res) => {
+// Route pour lister les médias
+app.get('/api/list-media/:section/photos', async (req, res) => {
     try {
-        const { section, type } = req.params;
-        const cacheKey = CACHE_KEYS.MEDIA_LIST(section, type);
-        
-        // Vérifier le cache d'abord
-        const cachedMedia = cache.get(cacheKey);
-        if (cachedMedia) {
-            return res.json(cachedMedia);
+        const { section } = req.params;
+        const uploadPath = getUploadPath(section);
+
+        // Vérifier si le dossier existe
+        try {
+            await fs.access(uploadPath);
+        } catch (error) {
+            // Créer le dossier s'il n'existe pas
+            await fs.mkdir(uploadPath, { recursive: true });
+            return res.json([]); // Retourner une liste vide
         }
 
-        let media;
-        if (type === 'photos') {
-            const { blobs } = await list({ prefix: `${section}/` });
-            media = blobs.map(blob => ({
-                name: blob.pathname.split('/').pop(),
-                url: blob.url,
+        // Lire le contenu du dossier
+        const files = await fs.readdir(uploadPath);
+        
+        // Filtrer et formater les résultats
+        const photos = files
+            .filter(file => file.endsWith('.webp')) // Ne garder que les images webp
+            .map(file => ({
+                name: file,
+                url: `/uploads/${section}/${file}`,
                 type: 'image'
             }));
-        } else if (type === 'documents') {
-            const { blobs } = await list({ prefix: `${section}-docs/` });
-            media = blobs.map(blob => ({
-                name: blob.pathname.split('/').pop(),
-                url: blob.url,
-                type: 'document',
-                originalName: blob.pathname.split('/').pop()
-            }));
-        }
 
-        // Mettre en cache pour 5 minutes
-        cache.set(cacheKey, media, 300);
-        res.json(media);
+        res.json(photos);
     } catch (error) {
-        console.error('Erreur:', error);
+        console.error('Erreur lors de la lecture des médias:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -1586,13 +1525,28 @@ app.post('/api/publish-photos', async (req, res) => {
 app.get('/api/list-media/:section/photos', async (req, res) => {
     try {
         const { section } = req.params;
-        const { blobs } = await list({ prefix: `${section}/` });
+        const uploadPath = getUploadPath(section);
 
-        const photos = blobs.map(blob => ({
-            name: blob.pathname.split('/').pop(),
-            url: blob.url,
-            type: 'image'
-        }));
+        // Vérifier si le dossier existe
+        try {
+            await fs.access(uploadPath);
+        } catch (error) {
+            // Créer le dossier s'il n'existe pas
+            await fs.mkdir(uploadPath, { recursive: true });
+            return res.json([]); // Retourner une liste vide
+        }
+
+        // Lire le contenu du dossier
+        const files = await fs.readdir(uploadPath);
+        
+        // Filtrer et formater les résultats
+        const photos = files
+            .filter(file => file.endsWith('.webp')) // Ne garder que les images webp
+            .map(file => ({
+                name: file,
+                url: `/uploads/${section}/${file}`,
+                type: 'image'
+            }));
 
         res.json(photos);
     } catch (error) {
@@ -1604,43 +1558,37 @@ app.get('/api/list-media/:section/photos', async (req, res) => {
 app.post('/api/rotate-photo', async (req, res) => {
     try {
         const { filename, type, degrees } = req.body;
-        const { blobs } = await list();
+        const filePath = path.join(getUploadPath(type), filename);
 
-        // Trouver le blob correspondant
-        const blobToRotate = blobs.find(blob => blob.pathname === `${type}/${filename}`);
-
-        if (!blobToRotate) {
+        // Vérifier si le fichier existe
+        try {
+            await fs.access(filePath);
+        } catch (error) {
             console.log('Photo non trouvée:', type, filename);
             return res.status(404).json({ error: 'Photo non trouvée' });
         }
 
-        console.log('Rotation de la photo:', blobToRotate.url);
+        console.log('Rotation de la photo:', filePath);
 
-        // Télécharger l'image
-        const response = await fetch(blobToRotate.url);
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        // Lire l'image
+        const buffer = await fs.readFile(filePath);
 
         // Faire pivoter l'image
         const rotatedBuffer = await sharp(buffer)
             .rotate(degrees)
             .toBuffer();
 
-        console.log('Image pivotée, suppression de l\'ancienne version');
+        console.log('Image pivotée, sauvegarde de la nouvelle version');
 
-        // Supprimer l'ancien blob
-        await del(blobToRotate.url);
-
-        console.log('Upload de la nouvelle version');
-
-        // Uploader la nouvelle version
-        const newUrl = await put(`${type}/${filename}`, rotatedBuffer, {
-            access: 'public',
-            token: process.env.BLOB_READ_WRITE_TOKEN
-        });
+        // Sauvegarder la nouvelle version
+        await fs.writeFile(filePath, rotatedBuffer);
 
         console.log('Rotation terminée avec succès');
-        res.json({ success: true, url: newUrl });
+        const timestamp = Date.now(); // Ajouter un timestamp
+        res.json({ 
+            success: true, 
+            url: `/uploads/${type}/${filename}?t=${timestamp}` // Ajouter le timestamp à l'URL
+        });
     } catch (error) {
         console.error('Erreur lors de la rotation:', error);
         res.status(500).json({ error: 'Erreur lors de la rotation de la photo' });
@@ -1682,3 +1630,117 @@ async function updateDiaporamaConfig(newConfig) {
     await put('config/diaporama-config.json', JSON.stringify(newConfig));
     cache.del(CACHE_KEYS.DIAPORAMA_CONFIG);
 }
+
+// Routes pour la gestion des médias
+app.get('/api/media/:section/:type', async (req, res) => {
+    try {
+        const { section, type } = req.params;
+        
+        // Le chemin est directement dans le dossier de la section
+        const mediaPath = path.join(STORAGE_CONFIG.base_path, section);
+        
+        // Créer le dossier s'il n'existe pas
+        await fs.mkdir(mediaPath, { recursive: true });
+
+        // Lire le contenu du dossier
+        const files = await fs.readdir(mediaPath);
+        
+        // Filtrer et formater les fichiers
+        const mediaFiles = await Promise.all(files.map(async (filename) => {
+            const filePath = path.join(mediaPath, filename);
+            const stats = await fs.stat(filePath);
+            return {
+                name: filename,
+                size: stats.size,
+                modified: stats.mtime
+            };
+        }));
+
+        // Ne retourner que les fichiers .webp pour les images
+        const filteredFiles = type === 'images' 
+            ? mediaFiles.filter(file => file.name.endsWith('.webp'))
+            : mediaFiles;
+
+        res.json(filteredFiles);
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des médias: ${error.message}`);
+        res.status(500).json({ error: 'Erreur lors de la récupération des médias' });
+    }
+});
+
+// Route pour l'upload des médias
+app.post('/api/media/:section/:type/upload', upload.single('file'), async (req, res) => {
+    try {
+        const { section, type } = req.params;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ error: 'Aucun fichier fourni' });
+        }
+
+        // Vérifier que la section et le type sont valides
+        if (!STORAGE_CONFIG.sections[section] || !STORAGE_CONFIG.sections[section][type]) {
+            return res.status(400).json({ error: 'Section ou type invalide' });
+        }
+
+        const mediaPath = path.join(STORAGE_CONFIG.base_path, section, type);
+        
+        // Créer le dossier s'il n'existe pas
+        await fs.mkdir(mediaPath, { recursive: true });
+
+        // Générer un nom de fichier unique
+        const filename = `${section}_${Date.now()}_${file.originalname}`;
+        const filePath = path.join(mediaPath, filename);
+
+        // Si c'est une image, la redimensionner et la convertir en WebP
+        if (type === 'images') {
+            await sharp(file.buffer)
+                .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
+                .webp({ quality: 80 })
+                .toFile(filePath);
+        } else {
+            // Pour les autres types de fichiers, les sauvegarder tels quels
+            await fs.writeFile(filePath, file.buffer);
+        }
+
+        res.json({
+            success: true,
+            file: {
+                name: filename,
+                path: `/uploads/${section}/${type}/${filename}`
+            }
+        });
+    } catch (error) {
+        console.error(`Erreur lors de l'upload du fichier: ${error.message}`);
+        res.status(500).json({ error: 'Erreur lors de l\'upload du fichier' });
+    }
+});
+
+// Route pour la suppression des médias
+app.delete('/api/media/:section/:type/:filename', async (req, res) => {
+    try {
+        const { section, type, filename } = req.params;
+
+        // Vérifier que la section et le type sont valides
+        if (!STORAGE_CONFIG.sections[section] || !STORAGE_CONFIG.sections[section][type]) {
+            return res.status(400).json({ error: 'Section ou type invalide' });
+        }
+
+        const filePath = path.join(STORAGE_CONFIG.base_path, section, type, filename);
+
+        // Vérifier que le fichier existe
+        try {
+            await fs.access(filePath);
+        } catch {
+            return res.status(404).json({ error: 'Fichier non trouvé' });
+        }
+
+        // Supprimer le fichier
+        await fs.unlink(filePath);
+
+        res.json({ success: true, message: 'Fichier supprimé avec succès' });
+    } catch (error) {
+        console.error(`Erreur lors de la suppression du fichier: ${error.message}`);
+        res.status(500).json({ error: 'Erreur lors de la suppression du fichier' });
+    }
+});

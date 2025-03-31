@@ -98,6 +98,9 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: move;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .media-item:hover {
@@ -107,15 +110,49 @@
 
         .preview-container {
             position: relative;
-            width: 200px;
-            height: 120px;
+            width: 100%;
+            padding-bottom: 75%; /* Ratio 4:3 */
             overflow: hidden;
+            border-radius: 4px;
         }
 
         .preview-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .preview-container.document {
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-container.document::before {
+            content: '📄';
+            font-size: 2.5rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .preview-container.pdf::before {
+            content: '📕';
+        }
+
+        .preview-container.doc::before,
+        .preview-container.docx::before {
+            content: '📘';
+        }
+
+        .preview-container.ppt::before,
+        .preview-container.pptx::before {
+            content: '📙';
         }
 
         .media-name {
@@ -263,18 +300,57 @@
         }
 
         .timeline-item-content {
-            position: relative;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 5px 0;
+        }
+
+        .timeline-item-content .preview-container {
+            width: 100px;
+            height: 75px;
+            padding-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .timeline-item-content .media-name {
+            width: 150px;
+            font-size: 0.85rem;
+            margin: 0;
         }
 
         .timeline-controls {
-            margin-left: auto;
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 5px;
+            margin-left: auto;
         }
 
-        .media-item.dragging {
-            opacity: 0.5;
+        .comment-controls {
+            width: 100%;
+            padding: 5px;
+            margin-top: 0;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .text-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .preview-container.document {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
         }
 
         .remove-btn {
@@ -298,23 +374,6 @@
             background: #c0392b;
         }
 
-        .timeline-item-content {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 10px 0;
-        }
-
-        .timeline-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
         .duration-input {
             width: 60px;
             padding: 5px;
@@ -327,23 +386,6 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             min-width: 120px;
-        }
-
-        .comment-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            margin-top: 5px;
-        }
-
-        .text-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
         }
 
         .font-select, .position-select {
@@ -470,7 +512,7 @@
             <!-- Photos -->
             <div class="media-window">
                 <h3>Photos</h3>
-                <div class="media-grid" id="photos-grid">
+                <div class="media-grid" id="available-images">
                     <!-- Les photos seront injectées ici par JavaScript -->
                 </div>
             </div>
@@ -478,7 +520,7 @@
             <!-- Documents -->
             <div class="media-window">
                 <h3>Documents</h3>
-                <div class="media-grid" id="documents-grid">
+                <div class="media-grid" id="available-documents">
                     <!-- Les documents seront injectés ici par JavaScript -->
                 </div>
             </div>
@@ -549,55 +591,80 @@
         // Fonction pour sauvegarder la timeline
         async function saveTimeline() {
             try {
+                // Supprimer toute notification existante
+                const existingNotifications = document.querySelectorAll('.notification');
+                existingNotifications.forEach(notif => notif.remove());
+
                 // Mettre à jour les données avant la sauvegarde
                 updateTimelineData();
 
                 // Vérifier que les données sont valides
                 if (!timelineData.cuisine || !timelineData.direction) {
-                    throw new Error('Données de timeline invalides');
+                    throw new Error('Structure de données invalide');
                 }
 
-                // Nettoyer les données avant l'envoi
+                // Fonction pour nettoyer les chemins de fichiers
+                function cleanPath(path) {
+                    if (!path) return '';
+                    // Supprimer le hostname et les paramètres d'URL si présents
+                    return path.replace(/^https?:\/\/[^\/]+/, '').split('?')[0];
+                }
+
+                // Nettoyer et valider les données avant l'envoi
                 const cleanConfig = {
                     cuisine: {
-                        medias: timelineData.cuisine.medias.map(media => ({
-                            type: media.type || 'image',
-                            path: media.path,
-                            name: media.name,
-                            duration: parseInt(media.duration) || 5,
-                            transition: media.transition || 'fade',
-                            comment: media.comment || '',
-                            fontFamily: media.fontFamily || 'Arial',
-                            fontSize: parseInt(media.fontSize) || 24,
-                            textColor: media.textColor || '#ffffff',
-                            textPosition: media.textPosition || 'top-left',
-                            fontWeight: media.fontWeight || 'normal',
-                            fontStyle: media.fontStyle || 'normal',
-                            enabled: true,
-                            hasBackground: Boolean(media.hasBackground)
-                        })).filter(media => media.path && media.name),
+                        medias: timelineData.cuisine.medias.map(media => {
+                            if (!media || !media.path) {
+                                console.warn('Média invalide ignoré:', media);
+                                return null;
+                            }
+
+                            return {
+                                type: media.type || 'image',
+                                path: cleanPath(media.path),
+                                name: media.name || '',
+                                duration: parseInt(media.duration) || 5,
+                                transition: media.transition || 'fade',
+                                comment: media.comment || '',
+                                fontFamily: media.fontFamily || 'Arial',
+                                fontSize: parseInt(media.fontSize) || 24,
+                                textColor: media.textColor || '#ffffff',
+                                textPosition: media.textPosition || 'bottom-center',
+                                fontWeight: media.fontWeight || 'normal',
+                                fontStyle: media.fontStyle || 'normal',
+                                hasBackground: Boolean(media.hasBackground)
+                            };
+                        }).filter(media => media !== null && media.path),
                         schedules: []
                     },
                     direction: {
-                        medias: timelineData.direction.medias.map(media => ({
-                            type: media.type || 'image',
-                            path: media.path,
-                            name: media.name,
-                            duration: parseInt(media.duration) || 5,
-                            transition: media.transition || 'fade',
-                            comment: media.comment || '',
-                            fontFamily: media.fontFamily || 'Arial',
-                            fontSize: parseInt(media.fontSize) || 24,
-                            textColor: media.textColor || '#ffffff',
-                            textPosition: media.textPosition || 'top-left',
-                            fontWeight: media.fontWeight || 'normal',
-                            fontStyle: media.fontStyle || 'normal',
-                            enabled: true,
-                            hasBackground: Boolean(media.hasBackground)
-                        })).filter(media => media.path && media.name),
+                        medias: timelineData.direction.medias.map(media => {
+                            if (!media || !media.path) {
+                                console.warn('Média invalide ignoré:', media);
+                                return null;
+                            }
+
+                            return {
+                                type: media.type || 'image',
+                                path: cleanPath(media.path),
+                                name: media.name || '',
+                                duration: parseInt(media.duration) || 5,
+                                transition: media.transition || 'fade',
+                                comment: media.comment || '',
+                                fontFamily: media.fontFamily || 'Arial',
+                                fontSize: parseInt(media.fontSize) || 24,
+                                textColor: media.textColor || '#ffffff',
+                                textPosition: media.textPosition || 'bottom-center',
+                                fontWeight: media.fontWeight || 'normal',
+                                fontStyle: media.fontStyle || 'normal',
+                                hasBackground: Boolean(media.hasBackground)
+                            };
+                        }).filter(media => media !== null && media.path),
                         schedules: []
                     }
                 };
+
+                console.log('Configuration à sauvegarder:', cleanConfig);
 
                 const response = await fetch('/api/diaporama-config', {
                     method: 'POST',
@@ -608,16 +675,20 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status}`);
+                    const result = await response.json();
+                    throw new Error(result.message || 'Erreur lors de la sauvegarde');
                 }
 
                 const result = await response.json();
                 console.log('Résultat de la sauvegarde:', result);
                 showNotification('Diaporama sauvegardé avec succès', 'success');
 
+                // Recharger la configuration après la sauvegarde
+                await loadExistingConfig();
+
             } catch (error) {
                 console.error('Erreur détaillée:', error);
-                showNotification('Erreur lors de la sauvegarde: ' + error.message, 'error');
+                showNotification(`Erreur lors de la sauvegarde: ${error.message}`, 'error');
             }
         }
 
@@ -644,64 +715,60 @@
         }
 
         // Fonction pour charger les médias disponibles
-        async function loadAvailableMedia() {
+        async function loadAvailableMedia(section) {
             try {
-                const section = currentSection;
-                console.log('Chargement des médias pour la section:', section);
+                // Charger les images
+                const imagesResponse = await fetch(`/api/list-media/${section}/photos`);
+                const images = await imagesResponse.json();
+                console.log('Photos chargées:', images);
 
-                // Charger les photos
-                const photosResponse = await fetch(`/api/${section}-photos`);
-                if (!photosResponse.ok) {
-                    throw new Error(`Erreur lors du chargement des photos: ${photosResponse.status}`);
-                }
-                const photos = await photosResponse.json();
-                console.log('Photos chargées:', photos);
-
-                // Mettre à jour l'affichage des photos
-                const photosGrid = document.getElementById('photos-grid');
-                photosGrid.innerHTML = photos.map(photo => `
-                    <div class="media-item" draggable="true" 
-                         data-type="image" 
-                         data-path="${photo.url}" 
-                         data-name="${photo.filename}">
+                // Mettre à jour la grille des images
+                const imageGrid = document.getElementById('available-images');
+                imageGrid.innerHTML = images.map(image => `
+                    <div class="media-item" draggable="true" data-type="image" data-path="/uploads/${section}/${image.name}">
                         <div class="preview-container">
-                            <img src="${photo.url}" alt="${photo.filename}">
+                            <img src="/uploads/${section}/${image.name}" alt="${image.name}">
                         </div>
-                        <div class="media-info">
-                            <div class="media-name">${photo.filename}</div>
-                            <span class="media-type">Image</span>
-                        </div>
+                        <div class="media-name">${image.name}</div>
+                        <div class="media-type">Image</div>
                     </div>
                 `).join('');
 
                 try {
-                    // Charger les documents (menus)
-                    const documentsResponse = await fetch(`/api/menu-${section}`);
+                    // Charger les documents selon la section
+                    const documentsEndpoint = section === 'cuisine' ? '/api/menu-cuisine' : '/api/direction-documents';
+                    const documentsResponse = await fetch(documentsEndpoint);
                     const documents = await documentsResponse.json();
                     console.log('Documents chargés:', documents);
 
-                    const documentsGrid = document.getElementById('documents-grid');
-                    documentsGrid.innerHTML = documents.map(doc => `
-                        <div class="media-item" draggable="true" 
-                             data-type="document" 
-                             data-path="/assets/data/menu-${section}/${doc.filename}" 
-                             data-name="${doc.filename}">
-                            <div class="preview-container document-preview">
-                                <i class="fas fa-file-pdf"></i>
+                    // Mettre à jour la grille des documents
+                    const documentGrid = document.getElementById('available-documents');
+                    documentGrid.innerHTML = documents.map(doc => {
+                        const filename = doc.filename || doc.name;
+                        const displayName = doc.originalName || filename;
+                        const path = `/assets/data/${section === 'cuisine' ? 'menu-cuisine' : 'direction-documents'}/${filename}`;
+                        const extension = filename.split('.').pop().toLowerCase();
+                        
+                        return `
+                            <div class="media-item" draggable="true" data-type="document" data-path="${path}" data-name="${displayName}">
+                                <div class="preview-container document ${extension}"></div>
+                                <div class="media-name">${displayName}</div>
+                                <div class="media-type">Document</div>
                             </div>
-                            <div class="media-info">
-                                <div class="media-name">${doc.originalName || doc.filename}</div>
-                                <span class="media-type">Document</span>
-                            </div>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 } catch (docError) {
-                    console.log('Pas de documents disponibles pour cette section');
-                    document.getElementById('documents-grid').innerHTML = '<p>Aucun document disponible</p>';
+                    console.warn('Pas de documents disponibles:', docError);
+                    const documentGrid = document.getElementById('available-documents');
+                    documentGrid.innerHTML = '<div class="no-documents">Aucun document disponible</div>';
                 }
 
                 // Ajouter les événements de drag and drop
-                initializeDragAndDrop();
+                const mediaItems = document.querySelectorAll('.media-item');
+                mediaItems.forEach(item => {
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragend', handleDragEnd);
+                });
 
             } catch (error) {
                 console.error('Erreur lors du chargement des médias:', error);
@@ -733,7 +800,7 @@
             document.getElementById('btn-direction').classList.toggle('active', section === 'direction');
 
             // Charger les médias de la nouvelle section
-            loadAvailableMedia();
+            loadAvailableMedia(section);
             // Mettre à jour l'affichage de la timeline
             updateTimelineDisplay();
         }
@@ -758,7 +825,7 @@
             console.log('Initialisation de la page...');
             validateTimelineData();
             await loadExistingConfig();
-            await loadAvailableMedia();
+            await loadAvailableMedia(currentSection);
 
             // Ajouter les écouteurs d'événements pour la timeline
             const timeline = document.getElementById('timeline');
@@ -780,12 +847,14 @@
 
         // Fonctions de gestion du drag and drop
         function handleDragStart(e) {
-            console.log('Début du glisser:', this.dataset.name);
-            e.dataTransfer.setData('text/plain', JSON.stringify({
+            console.log('Début du glisser:', this.dataset.path);
+            const mediaData = {
                 type: this.dataset.type,
                 path: this.dataset.path,
-                name: this.dataset.name
-            }));
+                name: this.querySelector('.media-name').textContent
+            };
+            console.log('Données à transférer:', mediaData);
+            e.dataTransfer.setData('text/plain', JSON.stringify(mediaData));
             this.classList.add('dragging');
         }
 
@@ -807,8 +876,18 @@
                 const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                 console.log('Données du drop:', data);
 
+                if (!data.type || !data.path || !data.name) {
+                    throw new Error('Données de média invalides');
+                }
+
                 // Créer l'élément dans la timeline
-                const mediaElement = createTimelineElement(data);
+                const mediaElement = createTimelineElement({
+                    type: data.type,
+                    path: data.path,
+                    name: data.name,
+                    duration: 5,
+                    transition: 'fade'
+                });
 
                 // Ajouter à la timeline
                 const timeline = document.getElementById('timeline');
@@ -816,9 +895,11 @@
 
                 // Mettre à jour les données
                 updateTimelineData();
+                showNotification('Média ajouté à la timeline', 'success');
 
             } catch (error) {
                 console.error('Erreur lors du drop:', error);
+                showNotification('Erreur lors de l\'ajout du média', 'error');
             }
         }
 
@@ -828,50 +909,72 @@
             element.className = 'timeline-item';
             element.draggable = true;
 
+            // Déterminer l'extension du fichier pour les documents
+            let documentClass = '';
+            if (data.type === 'document') {
+                const extension = data.path.split('.').pop().toLowerCase();
+                documentClass = extension;
+            }
+
+            // Liste complète des transitions disponibles
+            const transitions = [
+                { value: 'fade', label: 'Fondu' },
+                { value: 'slide', label: 'Glissement' },
+                { value: 'zoom', label: 'Zoom' },
+                { value: 'spiral', label: 'Spirale' },
+                { value: 'fade-zoom', label: 'Fondu + Zoom' },
+                { value: 'slide-fade', label: 'Glissement + Fondu' }
+            ];
+
+            const transitionsHtml = transitions.map(t => 
+                `<option value="${t.value}" ${data.transition === t.value ? 'selected' : ''}>${t.label}</option>`
+            ).join('');
+
             element.innerHTML = `
                 <div class="timeline-item-content">
-                    <div class="preview-container">
+                    <div class="preview-container ${data.type === 'document' ? 'document ' + documentClass : ''}">
                         ${data.type === 'image'
                             ? `<img src="${data.path}" alt="${data.name}">`
-                            : `<div class="document-preview" data-path="${data.path}">
-                                 <i class="fas fa-file-alt"></i>
-                               </div>`
+                            : `<div class="document-preview" data-path="${data.path}"></div>`
                         }
+                        ${data.comment ? `<div class="preview-text ${data.textPosition} ${data.hasBackground ? 'with-background' : ''}"
+                            style="
+                                font-family: ${data.fontFamily};
+                                font-size: ${data.fontSize}px;
+                                color: ${data.textColor};
+                                font-weight: ${data.fontWeight};
+                                font-style: ${data.fontStyle}
+                            ">${data.comment}</div>` : ''}
                     </div>
                     <div class="media-name">${data.name}</div>
                     <div class="timeline-controls">
                         <input type="number" value="${data.duration || 5}" min="1" max="60" 
                             class="duration-input" title="Durée (secondes)">
                         <select class="transition-select" title="Type de transition">
-                            <option value="fade" ${data.transition === 'fade' ? 'selected' : ''}>Fondu</option>
-                            <option value="slide" ${data.transition === 'slide' ? 'selected' : ''}>Glissement</option>
-                            <option value="zoom" ${data.transition === 'zoom' ? 'selected' : ''}>Zoom</option>
-                            <option value="spiral" ${data.transition === 'spiral' ? 'selected' : ''}>Spirale</option>
+                            ${transitionsHtml}
                         </select>
                         <button class="remove-btn" onclick="removeTimelineItem(this)" title="Supprimer">×</button>
                     </div>
                     <div class="comment-controls">
-                        <input type="text" class="comment-input" 
-                            placeholder="Ajouter un commentaire" 
-                            value="${data.comment || ''}" 
-                            title="Commentaire">
+                        <input type="text" class="comment-input" placeholder="Ajouter un commentaire" 
+                            value="${data.comment || ''}" title="Commentaire">
                         <div class="text-controls">
                             <select class="font-select" title="Police">
-                                <option value="Dancing Script">Manuscrit</option>
-                                <option value="Arial">Arial</option>
-                                <option value="Times New Roman">Times New Roman</option>
-                                <option value="Helvetica">Helvetica</option>
-                                <option value="Georgia">Georgia</option>
-                                <option value="Verdana">Verdana</option>
+                                <option value="Dancing Script" ${data.fontFamily === 'Dancing Script' ? 'selected' : ''}>Manuscrit</option>
+                                <option value="Arial" ${data.fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
+                                <option value="Times New Roman" ${data.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                <option value="Helvetica" ${data.fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                <option value="Georgia" ${data.fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                <option value="Verdana" ${data.fontFamily === 'Verdana' ? 'selected' : ''}>Verdana</option>
                             </select>
                             <select class="font-weight-select" title="Graisse">
-                                <option value="normal">Normal</option>
-                                <option value="bold">Gras</option>
-                                <option value="lighter">Fin</option>
+                                <option value="normal" ${data.fontWeight === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="bold" ${data.fontWeight === 'bold' ? 'selected' : ''}>Gras</option>
+                                <option value="lighter" ${data.fontWeight === 'lighter' ? 'selected' : ''}>Fin</option>
                             </select>
                             <select class="font-style-select" title="Style">
-                                <option value="normal">Normal</option>
-                                <option value="italic">Italique</option>
+                                <option value="normal" ${data.fontStyle === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="italic" ${data.fontStyle === 'italic' ? 'selected' : ''}>Italique</option>
                             </select>
                             <input type="number" class="font-size-input" 
                                 value="${data.fontSize || '24'}" 
@@ -890,14 +993,21 @@
                                 <option value="bottom-right" ${data.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
                             </select>
                             <div class="background-control">
-                                <input type="checkbox" id="backgroundToggle" class="background-toggle" onchange="updatePreview(this)">
+                                <input type="checkbox" id="backgroundToggle" class="background-toggle" 
+                                       onchange="updatePreview(this)"
+                                       ${data.hasBackground ? 'checked' : ''}>
                                 <label for="backgroundToggle">Fond semi-transparent</label>
                             </div>
                             <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
+
+            // Ajouter les événements de drag and drop
+            element.addEventListener('dragstart', handleTimelineItemDragStart);
+            element.addEventListener('dragend', handleTimelineItemDragEnd);
+            element.addEventListener('dragover', handleTimelineItemDragOver);
+            element.addEventListener('drop', handleTimelineItemDrop);
 
             return element;
         }
@@ -906,54 +1016,133 @@
         function updatePreview(element) {
             const timelineItem = element.closest('.timeline-item-content');
             const previewText = timelineItem.querySelector('.preview-text');
+            
+            // Si le previewText n'existe pas, le créer
+            if (!previewText) {
+                const newPreviewText = document.createElement('div');
+                newPreviewText.className = 'preview-text';
+                const previewContainer = timelineItem.querySelector('.preview-container');
+                previewContainer.appendChild(newPreviewText);
+            }
+
             const commentInput = timelineItem.querySelector('.comment-input');
             const fontSelect = timelineItem.querySelector('.font-select');
             const fontSizeInput = timelineItem.querySelector('.font-size-input');
             const colorPicker = timelineItem.querySelector('.color-picker');
             const positionSelect = timelineItem.querySelector('.position-select');
             const backgroundToggle = timelineItem.querySelector('.background-toggle');
+            const fontWeightSelect = timelineItem.querySelector('.font-weight-select');
+            const fontStyleSelect = timelineItem.querySelector('.font-style-select');
 
-            // Réinitialiser toutes les classes
-            previewText.className = 'preview-text';
+            const text = commentInput.value.trim();
             
-            // Ajouter la position
-            previewText.classList.add(positionSelect.value);
-            
-            // Ajouter le fond uniquement si la case est cochée
-            if (backgroundToggle && backgroundToggle.checked) {
-                previewText.classList.add('with-background');
+            if (text) {
+                // Réinitialiser toutes les classes
+                previewText.className = 'preview-text';
+                
+                // Ajouter la position
+                previewText.classList.add(positionSelect.value);
+                
+                // Ajouter le fond si nécessaire
+                if (backgroundToggle && backgroundToggle.checked) {
+                    previewText.classList.add('with-background');
+                }
+
+                // Mettre à jour les styles
+                previewText.textContent = text;
+                previewText.style.fontFamily = fontSelect.value === 'Dancing Script' ? "'Dancing Script', cursive" : fontSelect.value;
+                previewText.style.fontSize = `${fontSizeInput.value}px`;
+                previewText.style.color = colorPicker.value;
+                previewText.style.fontWeight = fontWeightSelect.value;
+                previewText.style.fontStyle = fontStyleSelect.value;
+                previewText.style.display = 'block';
+            } else {
+                // Masquer le texte s'il est vide
+                previewText.style.display = 'none';
             }
 
-            // Mettre à jour les autres styles
-            previewText.textContent = commentInput.value;
-            previewText.style.fontFamily = fontSelect.value;
-            previewText.style.fontSize = `${fontSizeInput.value}px`;
-            previewText.style.color = colorPicker.value;
+            // Mettre à jour les données
+            updateTimelineData();
         }
 
         // Fonction pour mettre à jour les données de la timeline
         function updateTimelineData() {
-            const timeline = document.getElementById('timeline');
-            const items = [...timeline.querySelectorAll('.timeline-item')].map(item => {
-                const content = item.querySelector('.timeline-item-content');
-                return {
-                    type: content.querySelector('.document-preview') ? 'document' : 'image',
-                    path: content.querySelector('img')?.src || content.querySelector('.document-preview')?.dataset.path,
-                    name: content.querySelector('.media-name').textContent,
-                    duration: parseInt(content.querySelector('.duration-input').value),
-                    transition: content.querySelector('.transition-select').value,
-                    comment: content.querySelector('.comment-input').value,
-                    fontFamily: content.querySelector('.font-select').value,
-                    fontSize: parseInt(content.querySelector('.font-size-input').value),
-                    textColor: content.querySelector('.color-picker').value,
-                    textPosition: content.querySelector('.position-select').value,
-                    fontWeight: content.querySelector('.font-weight-select')?.value || 'normal',
-                    fontStyle: content.querySelector('.font-style-select')?.value || 'normal',
-                    hasBackground: content.querySelector('.background-toggle').checked
-                };
-            });
+            try {
+                const timeline = document.getElementById('timeline');
+                const items = [...timeline.querySelectorAll('.timeline-item')].map(item => {
+                    const content = item.querySelector('.timeline-item-content');
+                    const previewContainer = content.querySelector('.preview-container');
+                    const isDocument = previewContainer.classList.contains('document');
+                    
+                    // Récupération sécurisée de tous les éléments
+                    const commentInput = content.querySelector('.comment-input');
+                    const fontSelect = content.querySelector('.font-select');
+                    const fontSizeInput = content.querySelector('.font-size-input');
+                    const colorPicker = content.querySelector('.color-picker');
+                    const positionSelect = content.querySelector('.position-select');
+                    const backgroundToggle = content.querySelector('.background-toggle');
+                    const transitionSelect = content.querySelector('.transition-select');
+                    const durationInput = content.querySelector('.duration-input');
+                    const fontWeightSelect = content.querySelector('.font-weight-select');
+                    const fontStyleSelect = content.querySelector('.font-style-select');
 
-            timelineData[currentSection].medias = items;
+                    // Récupération du chemin du média
+                    let path;
+                    if (isDocument) {
+                        const docPreview = content.querySelector('.document-preview');
+                        path = docPreview ? docPreview.dataset.path : previewContainer.dataset.path;
+                    } else {
+                        const img = content.querySelector('img');
+                        path = img ? img.src : '';
+                    }
+
+                    // Nettoyage du chemin
+                    if (path) {
+                        path = path.split('?')[0];
+                        // Supprimer le hostname si présent
+                        path = path.replace(/^https?:\/\/[^\/]+/, '');
+                    }
+
+                    // Construction de l'objet média avec tous les attributs
+                    const mediaData = {
+                        type: isDocument ? 'document' : 'image',
+                        path: path,
+                        name: content.querySelector('.media-name')?.textContent?.trim() || '',
+                        duration: parseInt(durationInput?.value) || 5,
+                        transition: transitionSelect?.value || 'fade',
+                        comment: commentInput?.value || '',
+                        fontFamily: fontSelect?.value || 'Arial',
+                        fontSize: parseInt(fontSizeInput?.value) || 24,
+                        textColor: colorPicker?.value || '#ffffff',
+                        textPosition: positionSelect?.value || 'bottom-center',
+                        fontWeight: fontWeightSelect?.value || 'normal',
+                        fontStyle: fontStyleSelect?.value || 'normal',
+                        hasBackground: backgroundToggle?.checked || false
+                    };
+
+                    // Validation des données
+                    if (!mediaData.path) {
+                        console.error('Chemin manquant pour un média:', mediaData);
+                        throw new Error('Chemin de média manquant');
+                    }
+
+                    // Log pour debug
+                    console.log('Données du média collectées:', mediaData);
+
+                    return mediaData;
+                });
+
+                // Filtrer les éléments invalides
+                const validItems = items.filter(item => item && item.path);
+                
+                // Mise à jour des données
+                timelineData[currentSection].medias = validItems;
+                console.log('Données de timeline mises à jour pour', currentSection, ':', timelineData[currentSection]);
+
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour des données:', error);
+                showNotification('Erreur lors de la mise à jour des données', 'error');
+            }
         }
 
         // Fonction pour afficher les notifications
@@ -998,81 +1187,25 @@
         function addMediaToTimeline(media) {
             console.log('Ajout du média à la timeline:', media);
             const timeline = document.getElementById('timeline');
+            const element = createTimelineElement(media);
 
-            const element = document.createElement('div');
-            element.className = 'timeline-item';
-            element.draggable = true;
+            // Ajouter les écouteurs d'événements pour les modifications de texte
+            const commentInput = element.querySelector('.comment-input');
+            const textControls = element.querySelectorAll('select, input[type="number"], input[type="color"], input[type="checkbox"]');
 
-            element.innerHTML = `
-                <div class="timeline-item-content">
-                    ${media.type === 'image'
-                    ? `<img src="${media.path}" alt="${media.name}" style="max-height: 50px;">`
-                    : `<div class="document-preview"><i class="fas fa-file-alt"></i></div>`
-                }
-                    <div class="media-name">${media.name}</div>
-                    <div class="timeline-controls">
-                        <input type="number" value="${media.duration || 5}" min="1" max="60" 
-                            class="duration-input" title="Durée (secondes)">
-                        <select class="transition-select" title="Type de transition">
-                            <option value="fade" ${media.transition === 'fade' ? 'selected' : ''}>Fondu</option>
-                            <option value="slide" ${media.transition === 'slide' ? 'selected' : ''}>Glissement</option>
-                            <option value="zoom" ${media.transition === 'zoom' ? 'selected' : ''}>Zoom</option>
-                            <option value="spiral" ${media.transition === 'spiral' ? 'selected' : ''}>Spirale</option>
-                        </select>
-                        <button class="remove-btn" onclick="removeTimelineItem(this)" title="Supprimer">×</button>
-                    </div>
-                    <div class="comment-controls">
-                        <input type="text" class="comment-input" placeholder="Ajouter un commentaire" 
-                            value="${media.comment || ''}" title="Commentaire">
-                        <div class="text-controls">
-                            <select class="font-select" title="Police">
-                                <option value="Dancing Script" ${media.fontFamily === 'Dancing Script' ? 'selected' : ''}>Manuscrit</option>
-                                <option value="Arial" ${media.fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
-                                <option value="Times New Roman" ${media.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
-                                <option value="Helvetica" ${media.fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
-                                <option value="Georgia" ${media.fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
-                                <option value="Verdana" ${media.fontFamily === 'Verdana' ? 'selected' : ''}>Verdana</option>
-                            </select>
-                            <select class="font-weight-select" title="Graisse">
-                                <option value="normal" ${media.fontWeight === 'normal' ? 'selected' : ''}>Normal</option>
-                                <option value="bold" ${media.fontWeight === 'bold' ? 'selected' : ''}>Gras</option>
-                                <option value="lighter" ${media.fontWeight === 'lighter' ? 'selected' : ''}>Fin</option>
-                            </select>
-                            <select class="font-style-select" title="Style">
-                                <option value="normal" ${media.fontStyle === 'normal' ? 'selected' : ''}>Normal</option>
-                                <option value="italic" ${media.fontStyle === 'italic' ? 'selected' : ''}>Italique</option>
-                            </select>
-                            <input type="number" class="font-size-input" 
-                                value="${media.fontSize || '24'}" 
-                                min="16" max="72" 
-                                title="Taille">
-                            <input type="color" class="color-picker" 
-                                value="${media.textColor || '#ffffff'}" 
-                                title="Couleur">
-                            <select class="position-select" title="Position">
-                                <option value="top-left" ${media.textPosition === 'top-left' ? 'selected' : ''}>Haut Gauche</option>
-                                <option value="top-center" ${media.textPosition === 'top-center' ? 'selected' : ''}>Haut Centre</option>
-                                <option value="top-right" ${media.textPosition === 'top-right' ? 'selected' : ''}>Haut Droite</option>
-                                <option value="center" ${media.textPosition === 'center' ? 'selected' : ''}>Centre</option>
-                                <option value="bottom-left" ${media.textPosition === 'bottom-left' ? 'selected' : ''}>Bas Gauche</option>
-                                <option value="bottom-center" ${media.textPosition === 'bottom-center' ? 'selected' : ''}>Bas Centre</option>
-                                <option value="bottom-right" ${media.textPosition === 'bottom-right' ? 'selected' : ''}>Bas Droite</option>
-                            </select>
-                            <div class="background-control">
-                                <input type="checkbox" id="backgroundToggle" class="background-toggle" 
-                                       onchange="updatePreview(this)"
-                                       ${media.hasBackground ? 'checked' : ''}>
-                                <label for="backgroundToggle">Fond semi-transparent</label>
-                            </div>
-                            <button class="emoji-button" onclick="toggleEmojiPicker(this)">😊</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // Mettre à jour la prévisualisation et les données lors de la modification du texte
+            commentInput.addEventListener('input', function() {
+                updatePreview(this);
+                updateTimelineData();
+            });
 
-            // Ajouter les événements de drag and drop
-            element.addEventListener('dragstart', handleTimelineItemDragStart);
-            element.addEventListener('dragend', handleTimelineItemDragEnd);
+            // Mettre à jour pour tous les contrôles de texte
+            textControls.forEach(control => {
+                control.addEventListener('change', function() {
+                    updatePreview(this);
+                    updateTimelineData();
+                });
+            });
 
             timeline.appendChild(element);
         }
@@ -1129,7 +1262,7 @@
             }
         }
 
-        // Modifier la fonction addEmoji pour fermer automatiquement après sélection
+        // Modifier la fonction addEmoji pour mettre à jour les données
         function addEmoji(emoji, element) {
             const timelineItem = element.closest('.timeline-item-content');
             const commentInput = timelineItem.querySelector('.comment-input');
@@ -1137,11 +1270,14 @@
             // Ajouter l'emoji au texte
             commentInput.value += emoji;
             
-            // Fermer automatiquement le sélecteur d'emoji
+            // Fermer le sélecteur d'emoji
             closeEmojiPicker();
             
             // Mettre à jour la prévisualisation
             updatePreview(commentInput);
+            
+            // Mettre à jour les données
+            updateTimelineData();
         }
 
         // Fonctions pour la réorganisation dans la timeline

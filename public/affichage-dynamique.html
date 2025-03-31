@@ -172,13 +172,15 @@
         height: 100% !important;
         object-fit: contain;
         opacity: 0;
-        transition: none; /* Réinitialiser la transition par défaut */
+        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        transform-origin: center center;
     }
 
     iframe.slideshow-media {
         width: 100% !important;
         height: 100% !important;
         border: none;
+        background: white;
     }
 
     /* Styles pour les transitions */
@@ -247,46 +249,64 @@
         background: transparent;
     }
 
-    /* Transition par fondu */
+    /* Transition: Fondu */
     .transition-fade {
-        transition: opacity 1.5s ease-in-out;
+        opacity: 0;
+        transform: none;
     }
-    
-    /* Transition par glissement */
-    .transition-slide {
-        transform: translateX(100%);
-        transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
-    }
-    
-    /* Transition par zoom */
-    .transition-zoom {
-        transform: scale(0.5);
-        transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
-    }
-    
-    /* État actif pour toutes les transitions */
-    .slideshow-media.active {
+    .transition-fade.active {
         opacity: 1;
+        transform: none;
     }
-    
+
+    /* Transition: Glissement */
+    .transition-slide {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
     .transition-slide.active {
+        opacity: 1;
         transform: translateX(0);
     }
-    
+
+    /* Transition: Zoom */
+    .transition-zoom {
+        opacity: 0;
+        transform: scale(0.8);
+    }
     .transition-zoom.active {
+        opacity: 1;
         transform: scale(1);
     }
 
-    /* Transition par spirale */
-    .transition-spiral {
-        transform: scale(0) rotate(0deg);
-        transform-origin: center;
-        transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 1.5s ease-in-out;
+    /* Transition: Fondu + Zoom */
+    .transition-fade-zoom {
+        opacity: 0;
+        transform: scale(1.2);
     }
-    
-    .transition-spiral.active {
-        transform: scale(1) rotate(720deg);
+    .transition-fade-zoom.active {
         opacity: 1;
+        transform: scale(1);
+    }
+
+    /* Transition: Glissement + Fondu */
+    .transition-slide-fade {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    .transition-slide-fade.active {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Transition: Spirale */
+    .transition-spiral {
+        opacity: 0;
+        transform: rotate(-360deg) scale(0);
+    }
+    .transition-spiral.active {
+        opacity: 1;
+        transform: rotate(0) scale(1);
     }
 
     /* Ajouter des styles pour le texte sur les images */
@@ -294,7 +314,50 @@
         position: absolute;
         z-index: 10;
         pointer-events: none;
-        transition: opacity 0.5s ease-in-out;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+
+    .text-overlay.active {
+        opacity: 1;
+    }
+
+    /* Styles pour les transitions du texte */
+    .text-overlay.fade {
+        opacity: 0;
+    }
+
+    .text-overlay.fade.active {
+        opacity: 1;
+    }
+
+    .text-overlay.slide {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    .text-overlay.slide.active {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .text-overlay.zoom {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    .text-overlay.zoom.active {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    /* Ajustements pour la police Dancing Script */
+    @font-face {
+        font-family: 'Dancing Script';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/dancingscript/v24/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSo3Sup6hNX6plRP.woff2) format('woff2');
     }
 
     .banner-right {
@@ -675,232 +738,252 @@
     let directionIndex = 0;
     let cuisineTimeout = null;
     let directionTimeout = null;
+    let isFirstLoad = true;
 
     // Fonction de chargement des configurations
     async function loadConfigurations() {
         try {
-            const cacheKey = 'diaporama_config_timestamp';
-            const lastCheck = sessionStorage.getItem(cacheKey);
-            const now = Date.now();
+            // Forcer le chargement au premier appel
+            if (!isFirstLoad) {
+                const cacheKey = 'diaporama_config_timestamp';
+                const lastCheck = sessionStorage.getItem(cacheKey);
+                const now = Date.now();
 
-            // Ne vérifier que toutes les 30 secondes
-            if (lastCheck && (now - parseInt(lastCheck)) < 30000) {
-                return;
+                // Ne vérifier que toutes les 30 secondes sauf au premier chargement
+                if (lastCheck && (now - parseInt(lastCheck)) < 30000) {
+                    return;
+                }
             }
 
-            console.log('Vérification des configurations...');
+            console.log('Chargement des configurations...');
             const response = await fetch('/api/diaporama-config');
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
             const config = await response.json();
 
             // Mettre à jour le timestamp
-            sessionStorage.setItem(cacheKey, now.toString());
+            sessionStorage.setItem('diaporama_config_timestamp', Date.now().toString());
 
-            // Vérifier si la configuration a changé
-            const configChanged = JSON.stringify(config) !== JSON.stringify({
+            // Toujours charger au premier démarrage
+            const configChanged = isFirstLoad || JSON.stringify(config) !== JSON.stringify({
                 cuisine: cuisineConfig,
                 direction: directionConfig
             });
 
             if (configChanged) {
-                console.log('Nouvelle configuration détectée');
+                console.log('Nouvelle configuration détectée ou premier chargement');
                 
                 if (cuisineTimeout) clearTimeout(cuisineTimeout);
                 if (directionTimeout) clearTimeout(directionTimeout);
 
+                // Réinitialiser les indices si nécessaire
                 if (config.cuisine?.medias?.length > 0) {
                     cuisineConfig = config.cuisine;
-                    if (cuisineIndex >= cuisineConfig.medias.length) {
-                        cuisineIndex = 0;
-                    }
+                    cuisineIndex = 0;
                     showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
+                } else {
+                    console.log('Aucun média trouvé pour la cuisine');
                 }
 
                 if (config.direction?.medias?.length > 0) {
                     directionConfig = config.direction;
-                    if (directionIndex >= directionConfig.medias.length) {
-                        directionIndex = 0;
-                    }
+                    directionIndex = 0;
                     showMedia('direction', directionConfig.medias[directionIndex]);
+                } else {
+                    console.log('Aucun média trouvé pour la direction');
                 }
+
+                isFirstLoad = false;
             }
         } catch (error) {
-            console.error('Erreur lors de la vérification des configurations:', error);
+            console.error('Erreur lors du chargement des configurations:', error);
+            // Réessayer dans 5 secondes en cas d'erreur
+            setTimeout(loadConfigurations, 5000);
         }
     }
 
     function showMedia(section, media) {
-        if (!media) {
-            console.error(`Pas de média à afficher pour ${section}`);
+        if (!media || !media.path) {
+            console.error(`Média invalide pour ${section}:`, media);
             return;
         }
+
+        console.log(`Affichage du média pour ${section}:`, media);
 
         const imgElement = document.getElementById(`slideshow-image-${section}`);
         const iframeElement = document.getElementById(`slideshow-document-${section}`);
         const textOverlay = document.getElementById(`${section}-text`);
+        const mediaContainer = imgElement.parentElement;
 
-        // Retirer toutes les classes existantes sauf slideshow-media
-        imgElement.className = 'slideshow-media';
-        iframeElement.className = 'slideshow-media';
-
-        const transition = media.transition || 'fade';
-
-        if (media.type === 'image') {
-            imgElement.onload = function() {
-                // Gestion du texte overlay
-                if (media.comment && media.comment.trim() !== '') {
-                    textOverlay.textContent = media.comment;
-                    
-                    // Application des styles de base avec vérification spécifique pour Dancing Script
-                    if (media.fontFamily === 'Dancing Script') {
-                        textOverlay.style.fontFamily = "'Dancing Script', cursive";
-                    } else {
-                        textOverlay.style.fontFamily = media.fontFamily || 'Arial';
-                    }
-                    textOverlay.style.fontSize = `${media.fontSize || 24}px`;
-                    textOverlay.style.color = media.textColor || '#ffffff';
-                    textOverlay.style.fontWeight = media.fontWeight || 'normal';
-                    textOverlay.style.fontStyle = media.fontStyle || 'normal';
-                    textOverlay.style.padding = '10px';
-                    textOverlay.style.borderRadius = '4px';
-                    textOverlay.style.maxWidth = '80%';
-                    textOverlay.style.display = 'block';
-                    textOverlay.style.position = 'absolute';
-
-                    // Appliquer le fond semi-transparent uniquement si hasBackground est true
-                    if (media.hasBackground) {
-                        textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
-                    } else {
-                        textOverlay.style.background = 'none';
-                    }
-
-                    // Positionnement du texte
-                    switch(media.textPosition) {
-                        case 'top-left':
-                            textOverlay.style.top = '10px';
-                            textOverlay.style.left = '10px';
-                            textOverlay.style.right = 'auto';
-                            textOverlay.style.bottom = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'top-right':
-                            textOverlay.style.top = '10px';
-                            textOverlay.style.right = '10px';
-                            textOverlay.style.left = 'auto';
-                            textOverlay.style.bottom = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'top-center':
-                            textOverlay.style.top = '10px';
-                            textOverlay.style.left = '0';
-                            textOverlay.style.right = '0';
-                            textOverlay.style.width = '100%';
-                            textOverlay.style.transform = 'none';
-                            textOverlay.style.textAlign = 'center';
-                            break;
-                        case 'center':
-                            textOverlay.style.top = '50%';
-                            textOverlay.style.left = '0';
-                            textOverlay.style.right = '0';
-                            textOverlay.style.width = '100%';
-                            textOverlay.style.transform = 'translateY(-50%)';
-                            textOverlay.style.textAlign = 'center';
-                            break;
-                        case 'bottom-left':
-                            textOverlay.style.bottom = '10px';
-                            textOverlay.style.left = '10px';
-                            textOverlay.style.top = 'auto';
-                            textOverlay.style.right = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'bottom-right':
-                            textOverlay.style.bottom = '10px';
-                            textOverlay.style.right = '10px';
-                            textOverlay.style.top = 'auto';
-                            textOverlay.style.left = 'auto';
-                            textOverlay.style.transform = 'none';
-                            break;
-                        case 'bottom-center':
-                            textOverlay.style.bottom = '10px';
-                            textOverlay.style.left = '0';
-                            textOverlay.style.right = '0';
-                            textOverlay.style.width = '100%';
-                            textOverlay.style.margin = '0 auto';
-                            textOverlay.style.textAlign = 'center';
-                            textOverlay.style.transform = 'none';
-                            break;
-                    }
-                } else {
-                    textOverlay.style.display = 'none';
-                }
-            };
-
-            imgElement.src = media.path;
-            imgElement.style.display = 'block';
-            iframeElement.style.display = 'none';
-
-            // Ajouter la nouvelle transition après un court délai
-            setTimeout(() => {
-                imgElement.classList.add(`transition-${transition}`);
-                imgElement.classList.add('active');
-            }, 50);
-
-        } else if (media.type === 'document' && media.path.toLowerCase().endsWith('.pdf')) {
-            const viewerUrl = `/pdfjs/web/viewer.html?file=${encodeURIComponent(media.path)}`;
-            iframeElement.src = viewerUrl;
-            iframeElement.style.display = 'block';
-            imgElement.style.display = 'none';
-            textOverlay.style.display = 'none';
-            
-            setTimeout(() => {
-                iframeElement.classList.add(`transition-${transition}`);
-                iframeElement.classList.add('active');
-            }, 50);
+        if (!imgElement || !iframeElement || !textOverlay || !mediaContainer) {
+            console.error(`Éléments DOM manquants pour ${section}`);
+            return;
         }
 
+        // Nettoyer les transitions précédentes
+        const elements = [imgElement, iframeElement];
+        elements.forEach(el => {
+            el.classList.remove('active');
+            el.style.display = 'none';
+            el.className = 'slideshow-media';
+        });
+
+        textOverlay.classList.remove('active');
+        textOverlay.style.display = 'none';
+        textOverlay.className = 'text-overlay';
+
+        const transition = media.transition || 'fade';
         const duration = Math.max(5, media.duration || 5) * 1000;
-        
-            if (section === 'cuisine') {
+
+        const showWithTransition = (element) => {
+            // Configurer le texte avant d'afficher le média
+            if (media.comment && media.comment.trim() !== '') {
+                configureTextOverlay(textOverlay, media);
+                textOverlay.style.display = 'block';
+                textOverlay.classList.add(`transition-${transition}`);
+            }
+
+            // Afficher et configurer le média
+            element.style.display = 'block';
+            element.classList.add(`transition-${transition}`);
+            
+            // Forcer un reflow avant d'ajouter les classes active
+            void element.offsetWidth;
+            void textOverlay.offsetWidth;
+
+            // Activer les transitions simultanément
+            requestAnimationFrame(() => {
+                element.classList.add('active');
+                if (media.comment && media.comment.trim() !== '') {
+                    textOverlay.classList.add('active');
+                }
+            });
+        };
+
+        if (media.type === 'image') {
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                imgElement.src = media.path;
+                showWithTransition(imgElement);
+            };
+            tempImg.onerror = () => {
+                console.error(`Erreur de chargement de l'image pour ${section}:`, media.path);
+                scheduleNextMedia(section);
+            };
+            tempImg.src = media.path;
+        } else if (media.type === 'document') {
+            if (media.path.toLowerCase().endsWith('.pdf')) {
+                const viewerUrl = `/pdfjs/web/viewer.html?file=${encodeURIComponent(media.path)}`;
+                iframeElement.src = viewerUrl;
+                showWithTransition(iframeElement);
+
+                iframeElement.onerror = () => {
+                    console.error(`Erreur de chargement du document pour ${section}:`, media.path);
+                    scheduleNextMedia(section);
+                };
+            } else {
+                console.error(`Type de document non supporté pour ${section}:`, media.path);
+                scheduleNextMedia(section);
+                return;
+            }
+        }
+
+        scheduleNextMedia(section, duration);
+    }
+
+    function configureTextOverlay(textOverlay, media) {
+        // Réinitialiser les styles
+        textOverlay.style = '';
+        textOverlay.className = 'text-overlay';
+
+        // Appliquer le texte et les styles
+        textOverlay.textContent = media.comment;
+
+        // Appliquer la police avec gestion spéciale pour Dancing Script
+        if (media.fontFamily === 'Dancing Script') {
+            textOverlay.style.fontFamily = "'Dancing Script', cursive";
+        } else {
+            textOverlay.style.fontFamily = media.fontFamily || 'Arial';
+        }
+
+        // Appliquer les autres styles
+        textOverlay.style.fontSize = `${media.fontSize || 24}px`;
+        textOverlay.style.color = media.textColor || '#ffffff';
+        textOverlay.style.fontWeight = media.fontWeight || 'normal';
+        textOverlay.style.fontStyle = media.fontStyle || 'normal';
+        textOverlay.style.padding = '10px';
+        textOverlay.style.borderRadius = '4px';
+        textOverlay.style.maxWidth = '80%';
+        textOverlay.style.textAlign = 'center';
+        textOverlay.style.position = 'absolute';
+        textOverlay.style.zIndex = '2';
+        textOverlay.style.transition = 'opacity 0.5s ease-in-out';
+
+        // Appliquer le fond semi-transparent si nécessaire
+        if (media.hasBackground) {
+            textOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+        }
+
+        // Positionner le texte
+        const positions = {
+            'top-left': { top: '10px', left: '10px' },
+            'top-center': { top: '10px', left: '50%', transform: 'translateX(-50%)' },
+            'top-right': { top: '10px', right: '10px' },
+            'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
+            'bottom-left': { bottom: '10px', left: '10px' },
+            'bottom-center': { bottom: '10px', left: '50%', transform: 'translateX(-50%)' },
+            'bottom-right': { bottom: '10px', right: '10px' }
+        };
+
+        const position = positions[media.textPosition] || positions['bottom-center'];
+        Object.assign(textOverlay.style, position);
+    }
+
+    function scheduleNextMedia(section, duration = 5000) {
+        if (section === 'cuisine') {
             if (cuisineTimeout) clearTimeout(cuisineTimeout);
             cuisineTimeout = setTimeout(() => {
-                cuisineIndex = (cuisineIndex + 1) % cuisineConfig.medias.length;
-                showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
+                if (cuisineConfig.medias.length > 0) {
+                    cuisineIndex = (cuisineIndex + 1) % cuisineConfig.medias.length;
+                    showMedia('cuisine', cuisineConfig.medias[cuisineIndex]);
+                }
             }, duration);
-            } else {
+        } else if (section === 'direction') {
             if (directionTimeout) clearTimeout(directionTimeout);
             directionTimeout = setTimeout(() => {
-                directionIndex = (directionIndex + 1) % directionConfig.medias.length;
-                showMedia('direction', directionConfig.medias[directionIndex]);
-        }, duration);
+                if (directionConfig.medias.length > 0) {
+                    directionIndex = (directionIndex + 1) % directionConfig.medias.length;
+                    showMedia('direction', directionConfig.medias[directionIndex]);
+                }
+            }, duration);
         }
     }
 
     // Initialisation au chargement de la page
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initialisation du diaporama...');
+        // Charger immédiatement les configurations
         loadConfigurations();
-        // Augmenter l'intervalle à 60 secondes au lieu de 30
-        setInterval(loadConfigurations, 60000);
-    });
+        // Vérifier les mises à jour toutes les 30 secondes
+        setInterval(loadConfigurations, 30000);
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Stocker la page actuelle dans l'historique
+        // Gestion du bouton retour
+        const backButton = document.querySelector('.hidden-back-button');
+        if (backButton) {
+            backButton.addEventListener('click', () => {
+                const lastPage = sessionStorage.getItem('lastPage') || '/';
+                window.location.href = lastPage;
+                sessionStorage.removeItem('lastPage');
+            });
+        }
+
+        // Stocker la page actuelle pour le retour
         const currentPage = window.location.pathname;
         if (!sessionStorage.getItem('lastPage')) {
             sessionStorage.setItem('lastPage', document.referrer || '/');
         }
 
-        // Gérer le clic sur le bouton retour
-        document.querySelector('.hidden-back-button').addEventListener('click', () => {
-            const lastPage = sessionStorage.getItem('lastPage');
-            if (lastPage && lastPage !== '') {
-                window.location.href = lastPage;
-            } else {
-                window.location.href = '/'; // Page par défaut si pas d'historique
-            }
-            sessionStorage.removeItem('lastPage'); // Nettoyer après utilisation
-        });
-
-        // Stocker la page actuelle pour le prochain retour
         window.addEventListener('beforeunload', () => {
             sessionStorage.setItem('lastPage', currentPage);
         });

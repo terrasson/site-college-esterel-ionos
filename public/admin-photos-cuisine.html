@@ -369,7 +369,13 @@
         // Fonction pour faire pivoter une image
         async function rotateImage(filename, degrees) {
             try {
-                const response = await fetch(`/api/rotate-photo`, {
+                const card = elements.photosGrid.querySelector(`[data-filename="${filename}"]`);
+                const img = card?.querySelector('img');
+                if (card) {
+                    card.style.opacity = '0.5';
+                }
+
+                const response = await fetch('/api/rotate-photo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -382,9 +388,18 @@
                 });
 
                 if (response.ok) {
+                    const data = await response.json();
+                    if (img && data.url) {
+                        img.src = data.url; // Mettre à jour directement l'URL de l'image avec le timestamp
+                    }
+                    if (card) {
+                        card.style.opacity = '1';
+                    }
                     showStatus('Photo pivotée avec succès !', true);
-                    await loadPhotos(); // Recharger les photos pour voir le changement
                 } else {
+                    if (card) {
+                        card.style.opacity = '1';
+                    }
                     throw new Error('Erreur lors de la rotation');
                 }
             } catch (error) {
